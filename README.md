@@ -10,7 +10,7 @@
 	Paste a playlist ID and press load playlist to grab every video in the playlist 
 	IE: The playlist ID is after the list= https://www.youtube.com/playlist?list=PL9n07ws2xINsLzMHXJqpHhmpltpFNQgQn
 	You would paste PL9n07ws2xINsLzMHXJqpHhmpltpFNQgQn in this case
-	You can press reset to delete all URL indexs at once, this does not delete the file, it will remove all previous indexes
+	You can press reset to delete all URL indexs at once, this does not delete the file, it will clear all current indexes
 	And write over them everytime you export file
 	For any questions, comments, concerns, etc, P.Penguin#0420
 	
