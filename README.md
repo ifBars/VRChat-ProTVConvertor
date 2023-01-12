@@ -3,6 +3,7 @@
  
  USAGE:
  
+	Run setup.exe to install, optionally create a shortcut for UrlArray.application
 	Enter a single, full youtube URL to add one to the list of URLS
 	Optionally, add a prefix to put before the youtube links (IE: https://nextnex.com/?url=)
 	Press add link to add the one link
