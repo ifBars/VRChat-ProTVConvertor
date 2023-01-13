@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -44,68 +43,64 @@ namespace UrlArray
 
         private void button1_Click(object sender, EventArgs e)
         {
-            // Check if URL exists
-            if (textBox1.Text != "" && textBox1.Text.Contains("www.youtube.com/watch?v="))
+            // Register YouTube Service
+            var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
+                ApiKey = "YOU_API_KEYYOU_API_KEY",
+                ApplicationName = this.GetType().ToString()
+            });
 
-                // Register YouTube Service
-                var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-                {
-                    ApiKey = "YOUR_API_KEY",
-                    ApplicationName = this.GetType().ToString()
-                });
+            // Validate input URL
+            if (!IsValidUrl(textBox1.Text))
+            {
+                label1.Text = "Please input valid link url";
+                return;
+            }
 
-                // Register video request variable
-                var videoRequest = youtubeService.Videos.List("snippet");
+            // Get video name 
+            string videoName = GetVideoName(youtubeService, textBox1.Text);
 
-                // Parse user input URL
-                string videoId = Regex.Match(textBox1.Text, @"v=([^&]+)").Groups[1].Value;
-                videoRequest.Id = videoId;
+            // Get prefix
+            prefix = textBox2.Text.Contains("https") ? textBox2.Text : "";
 
-                // Grab video name
-                var videoResponse = videoRequest.Execute();
+            // Add the URL from the text box to the list
+            label1.Text = "Adding Link";
+            urlList.Insert(index, "@" + prefix + textBox1.Text);
+            nameList.Insert(index, videoName);
 
-                if (videoResponse.Items.Count > 0)
-                {
-                    var video = videoResponse.Items[0];
-                    videoName = video.Snippet.Title;
-                }
+            // Clearing up
+            textBox1.Text = "";
+            label1.Text = "Link added";
+            index++;
+            label3.Text = index.ToString();
+        }
 
-                    // Check if user prefix exists
-                    if (textBox2.Text.Contains("https"))
-                {
-                    prefix = textBox2.Text;
+        private bool IsValidUrl(string url)
+        {
+            return Regex.IsMatch(url, @"www.youtube.com/watch?v=");
+        }
 
-                    // Add the URL from the text box to the list
-                    label1.Text = "Adding Link";
-                    urlList.Insert(index, "@" + prefix + textBox1.Text);
-                    nameList.Insert(index, videoName);
+        private string GetVideoName(YouTubeService youtubeService, string url)
+        {
+            var videoRequest = youtubeService.Videos.List("snippet");
 
-                    // Clearing up
-                    textBox1.Text = "";
-                    label1.Text = "Link added";
-                    index++;
-                    label3.Text = index.ToString();
-                } else
-                {
-                    // Add the URL from the text box to the list
-                    label1.Text = "Adding Link";
-                    urlList.Insert(index, "@" + textBox1.Text);
-                    nameList.Insert(index, videoName);
+            // Parse video id from URL
+            string videoId = Regex.Match(url, @"v=([^&]+)").Groups[1].Value;
+            videoRequest.Id = videoId;
 
-                    // Clearing up
-                    textBox1.Text = "";
-                    label1.Text = "Link added";
-                    index++;
-                    label3.Text = index.ToString();
-                }
+            // Grab video name
+            var videoResponse = videoRequest.Execute();
 
-                    
-                }
+            if (videoResponse.Items.Count > 0)
+            {
+                var video = videoResponse.Items[0];
+                return video.Snippet.Title;
+            }
             else
             {
-                // Throw URL does not exist message
-                label1.Text = "Please input link url";
+                // Handle error scenario
+                MessageBox.Show("Error grabbing video name");
+                return "";
             }
         }
 
@@ -135,7 +130,7 @@ namespace UrlArray
                 // Make sure the lists are the same length
                 if (urlList.Count != nameList.Count)
             {
-                label1.Text = "Error: lists are not the same length";
+                MessageBox.Show("Error: lists are not the same length");
                 return;
             }
 
@@ -169,7 +164,7 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "YOUR_API_KEY",
+                ApiKey = "YOU_API_KEY",
                 ApplicationName = this.GetType().ToString()
             });
 
