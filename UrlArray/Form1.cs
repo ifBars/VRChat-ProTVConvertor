@@ -26,8 +26,6 @@ namespace UrlArray
         string prefix = "";
         // Register file path
         string filePath;
-        // Register video name
-        string videoName;
         // Register playlist Items
         List<PlaylistItem> playlistItems = new List<PlaylistItem>();
 
