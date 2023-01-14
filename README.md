@@ -19,3 +19,5 @@
 	
 	-Quick Note: If you are using URL Prefixes, make sure it is a link like https://nextnex.com/?url= as well as,
 	Make sure to put in your prefix before loading a playlist or link
+
+![image](https://user-images.githubusercontent.com/114284668/212461669-486d9c18-39f3-43a8-9be9-60d3dde40dda.png)
