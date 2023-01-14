@@ -29,3 +29,4 @@ C:\Users\Ghost\source\repos\UrlArray\UrlArray\obj\Debug\UrlArray.application
 C:\Users\Ghost\source\repos\UrlArray\UrlArray\obj\Debug\ProTVUploader.csproj.CopyComplete
 C:\Users\Ghost\source\repos\UrlArray\UrlArray\obj\Debug\UrlArray.exe
 C:\Users\Ghost\source\repos\UrlArray\UrlArray\obj\Debug\UrlArray.pdb
+C:\Users\Ghost\source\repos\UrlArray\UrlArray\obj\Debug\UrlArray.Form2.resources

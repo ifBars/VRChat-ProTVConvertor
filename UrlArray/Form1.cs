@@ -26,6 +26,10 @@ namespace UrlArray
         string prefix = "";
         // Register file path
         string filePath;
+        // Register name of file input
+        string userInput = "urls";
+        // Register real video name variable
+        public static string realVideoTitle;
         // Register playlist Items
         List<PlaylistItem> playlistItems = new List<PlaylistItem>();
 
@@ -44,19 +48,31 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "YOU_API_KEYYOU_API_KEY",
+                ApiKey = "YOUR_API_KEY",
                 ApplicationName = this.GetType().ToString()
             });
 
             // Validate input URL
-            if (!IsValidUrl(textBox1.Text))
+            if (!IsValidYoutubeUrl(textBox1.Text))
             {
-                label1.Text = "Please input valid link url";
-                return;
+                if(!IsValidUrl(textBox1.Text))
+                {
+                    label1.Text = "Please input valid link url";
+                    return;
+                }
+                    
             }
 
             // Get video name 
-            string videoName = GetVideoName(youtubeService, textBox1.Text);
+            string videoName;
+
+            if (textBox4.Text != "" && textBox4.Text.Contains("Name (Optional)") == false)
+            {
+                videoName = textBox4.Text;
+            } else
+            {
+                videoName = "Song" + index.ToString();
+            }
 
             // Get prefix
             prefix = textBox2.Text.Contains("https") ? textBox2.Text : "";
@@ -68,14 +84,20 @@ namespace UrlArray
 
             // Clearing up
             textBox1.Text = "";
+            textBox4.Text = "";
             label1.Text = "Link added";
             index++;
             label3.Text = index.ToString();
         }
 
-        private bool IsValidUrl(string url)
+        private bool IsValidYoutubeUrl(string url)
         {
             return Regex.IsMatch(url, @"www.youtube.com/watch?v=");
+        }
+
+        private bool IsValidUrl(string url)
+        {
+            return Regex.IsMatch(url, @"https://");
         }
 
         private string GetVideoName(YouTubeService youtubeService, string url)
@@ -112,6 +134,11 @@ namespace UrlArray
                 prefix = textBox2.Text;
             }
 
+            if(textBox5.Text.Contains("File Name (No Need for .txt)") == false)
+            {
+                userInput = textBox5.Text;
+            }
+
             // Create a new FolderBrowserDialog
             var folderBrowserDialog1 = new FolderBrowserDialog();
 
@@ -122,7 +149,7 @@ namespace UrlArray
                 string folderPath = folderBrowserDialog1.SelectedPath;
 
                 // Append the file name to the folder path
-                filePath = Path.Combine(folderPath, "urls.txt");
+                filePath = Path.Combine(folderPath, userInput + ".txt");
             }
 
                 // Make sure the lists are the same length
@@ -162,7 +189,7 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "YOU_API_KEY",
+                ApiKey = "YOUR_API_KEY",
                 ApplicationName = this.GetType().ToString()
             });
 
@@ -225,7 +252,22 @@ namespace UrlArray
             // Print the title and URL of each video in the playlist
             foreach (var playlistItem in playlistItems)
             {
-                var videoTitle = playlistItem.Snippet.Title;
+
+                string videoTitle = "";
+                realVideoTitle = playlistItem.Snippet.Title;
+
+                if (textBox4.Text.Contains("Name (Optional)") == false)
+                {
+                    Console.WriteLine("Custom Name");
+                    Form2 f2 = new Form2();
+                    videoTitle = f2.openName();
+                }
+                else
+                {
+                    videoTitle = realVideoTitle;
+                }
+
+                
                 var videoId = playlistItem.Snippet.ResourceId.VideoId;
                 var videoUrl = "https://www.youtube.com/watch?v=" + videoId;
                 urlList.Insert(index, "@" + prefix + videoUrl);
