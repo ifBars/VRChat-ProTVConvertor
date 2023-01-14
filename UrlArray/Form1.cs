@@ -71,7 +71,14 @@ namespace UrlArray
                 videoName = textBox4.Text;
             } else
             {
-                videoName = "Song" + index.ToString();
+                if (IsValidYoutubeUrl(textBox1.Text))
+                {
+                    videoName = GetVideoName(youtubeService, textBox1.Text);
+                }
+                else
+                {
+                    videoName = "Song " + index.ToString();
+                }
             }
 
             // Get prefix
