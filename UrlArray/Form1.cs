@@ -12,6 +12,7 @@ using Google;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
+using System.Collections.Concurrent;
 
 namespace UrlArray
 {
@@ -48,7 +49,7 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "YOUR_API_KEY",
+                ApiKey = "AIzaSyAribhLCMFwNSyRWQ08tvDUorRg_36CPqA",
                 ApplicationName = this.GetType().ToString()
             });
 
@@ -90,8 +91,8 @@ namespace UrlArray
             nameList.Insert(index, videoName);
 
             // Clearing up
-            textBox1.Text = "";
-            textBox4.Text = "";
+            textBox1.Text = "URL";
+            textBox4.Text = "Name (Optional)";
             label1.Text = "Link added";
             index++;
             label3.Text = index.ToString();
@@ -141,7 +142,7 @@ namespace UrlArray
                 prefix = textBox2.Text;
             }
 
-            if(textBox5.Text.Contains("File Name (No Need for .txt)") == false)
+            if (textBox5.Text.Contains("File Name (No Need for .txt)") == false)
             {
                 userInput = textBox5.Text;
             }
@@ -159,8 +160,8 @@ namespace UrlArray
                 filePath = Path.Combine(folderPath, userInput + ".txt");
             }
 
-                // Make sure the lists are the same length
-                if (urlList.Count != nameList.Count)
+            // Make sure the lists are the same length
+            if (urlList.Count != nameList.Count)
             {
                 MessageBox.Show("Error: lists are not the same length");
                 return;
@@ -168,25 +169,41 @@ namespace UrlArray
 
             try
             {
-                // Erase the file each time before rewriting to it
-                File.WriteAllText(filePath, string.Empty);
+                BlockingCollection<Tuple<string, string>> queue = new BlockingCollection<Tuple<string, string>>(new ConcurrentQueue<Tuple<string, string>>());
 
-                // Write the list of URLs and names to a file
-                using (StreamWriter sw = new StreamWriter(filePath))
-                {
+                // Producer task
+                Task.Factory.StartNew(() => {
                     for (int i = 0; i < urlList.Count; i++)
                     {
-                        sw.WriteLine(urlList[i]);
-                        sw.WriteLine(nameList[i]);
-                        sw.WriteLine("");
+                        queue.Add(new Tuple<string, string>(urlList[i], nameList[i]));
                     }
-                    label1.Text = "File written successfully";
-                }
+                    queue.CompleteAdding();
+                });
+
+                // Consumer task
+                Task.Factory.StartNew(() => {
+                    // Erase the file each time before rewriting to it
+                    File.WriteAllText(filePath, string.Empty);
+
+                    // Write the list of URLs and names to a file
+                    using (StreamWriter sw = new StreamWriter(filePath))
+                    {
+                        foreach (var item in queue.GetConsumingEnumerable())
+                        {
+                            sw.WriteLine(item.Item1);
+                            sw.WriteLine(item.Item2);
+                            sw.WriteLine("");
+                        }
+                    }
+                    
+                    textBox5.Text = "File Name (No Need for .txt)";
+                });
             }
             catch (IOException)
             {
                 MessageBox.Show("An error occurred while trying to access the file: Is the file open in another program?");
             }
+            label1.Text = "File written successfully";
         }
 
         private async void button3_Click(object sender, EventArgs e)
@@ -196,13 +213,16 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "YOUR_API_KEY",
+                ApiKey = "AIzaSyAribhLCMFwNSyRWQ08tvDUorRg_36CPqA",
                 ApplicationName = this.GetType().ToString()
             });
 
             // Get the playlist ID from the text box
             var playlistId = textBox3.Text;
-            textBox3.Text = "";
+            textBox3.Text = "Playlist ID";
+
+            // Initialize the blocking collection to hold the results
+            var playlistItemsBuffer = new BlockingCollection<PlaylistItem>();
 
             // Try playlist ID and throw error if Incorrect
             try
@@ -211,44 +231,54 @@ namespace UrlArray
                 var playlistItemsListRequest = youtubeService.PlaylistItems.List("snippet");
                 playlistItemsListRequest.PlaylistId = playlistId;
                 playlistItemsListRequest.MaxResults = 500;
-                playlistItemsListRequest.MaxResults = 500;
 
                 // Set the PageToken property to an empty string to retrieve the first page of results
                 playlistItemsListRequest.PageToken = "";
 
-                // Initialize the list to hold the results
-                playlistItems = new List<PlaylistItem>();
-
-                // Initialize the counter variable
-                var totalResults = 0;
-
-                // Retrieve the results
-                while (totalResults < 500)
+                // Execute the request in a background thread
+                await Task.Run(async () =>
                 {
-                    // Execute the request
-                    playlistItemsListResponse = await playlistItemsListRequest.ExecuteAsync();
 
-                    // Add the results to the list
-                    playlistItems.AddRange(playlistItemsListResponse.Items);
+                    // Initialize the counter variable
+                    var totalResults = 0;
 
-                    // Increment the counter variable
-                    totalResults += playlistItemsListResponse.Items.Count;
-
-                    // Set the page token for the next request
-                    playlistItemsListRequest.PageToken = playlistItemsListResponse.NextPageToken;
-
-                    // If there are no more pages, break out of the loop
-                    if (string.IsNullOrEmpty(playlistItemsListResponse.NextPageToken))
+                    while (totalResults < 500)
                     {
-                        break;
+                        // Execute the request
+                        playlistItemsListResponse = await playlistItemsListRequest.ExecuteAsync();
+
+                        // Add the results to the blocking collection
+                        foreach (var playlistItem in playlistItemsListResponse.Items)
+                        {
+                            playlistItemsBuffer.Add(playlistItem);
+                        }
+
+                        // Increment the counter variable
+                        totalResults += playlistItemsListResponse.Items.Count;
+
+                        // Set the page token for the next request
+                        playlistItemsListRequest.PageToken = playlistItemsListResponse.NextPageToken;
+
+                        // If there are no more pages, break out of the loop
+                        if (string.IsNullOrEmpty(playlistItemsListResponse.NextPageToken))
+                        {
+                            break;
+                        }
                     }
-                }
+                });
+
+                // Complete the blocking collection to signal that no more items will be added
+                playlistItemsBuffer.CompleteAdding();
+
+                // Update the UI with the results (if needed)
             }
             catch (GoogleApiException ev)
             {
                 if (ev.Error.Code == 404)
                 {
                     MessageBox.Show("Invalid playlist ID. Is the playlist private? All playlists must be public to grab.");
+                    MessageBox.Show("The program will now close due to GoogleAPIException issue.");
+                    Environment.Exit(0);
                 }
                 else
                 {
@@ -257,15 +287,14 @@ namespace UrlArray
             }
 
             // Print the title and URL of each video in the playlist
-            foreach (var playlistItem in playlistItems)
+            foreach (var playlistItem in playlistItemsBuffer.GetConsumingEnumerable())
             {
 
                 string videoTitle = "";
                 realVideoTitle = playlistItem.Snippet.Title;
 
-                if (textBox4.Text.Contains("Name (Optional)") == false)
+                if (checkBox1.Checked == true)
                 {
-                    Console.WriteLine("Custom Name");
                     Form2 f2 = new Form2();
                     videoTitle = f2.openName();
                 }
@@ -292,6 +321,16 @@ namespace UrlArray
             nameList.Clear();
             index = 0;
             label3.Text = index.ToString();
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
