@@ -49,7 +49,7 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "AIzaSyAribhLCMFwNSyRWQ08tvDUorRg_36CPqA",
+                ApiKey = "YOUR_API_KEY_HERE",
                 ApplicationName = this.GetType().ToString()
             });
 
@@ -213,7 +213,7 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "AIzaSyAribhLCMFwNSyRWQ08tvDUorRg_36CPqA",
+                ApiKey = "YOUR_API_KEY_HERE",
                 ApplicationName = this.GetType().ToString()
             });
 
