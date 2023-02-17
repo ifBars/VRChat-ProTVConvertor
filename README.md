@@ -13,7 +13,7 @@
 	-You can press empty links to delete all URL indexs at once, this does not delete the file
 	It will clear all current indexes and write over them everytime you export to the same file
 	-To set a custom name for a single url, delete the [Name (Optional)] and replace it with the name you want for the url
-	-To set custom names for a playlist, delete the [Name (Optional)], and load the playlist from the ID
+	-To set custom names for a playlist, tick Use Custom Names, and load the playlist from the ID
 	It will then ask for a custom name for each song, if you do not want a custom name for that one, you can simply press enter
  	-For any questions, comments, concerns, etc, P.Penguin#0420
 	
