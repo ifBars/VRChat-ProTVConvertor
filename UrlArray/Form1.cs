@@ -44,7 +44,7 @@ namespace UrlArray
 
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        YouTubeService RegisterYT()
         {
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
@@ -52,6 +52,13 @@ namespace UrlArray
                 ApiKey = "YOUR_API_KEY_HERE",
                 ApplicationName = this.GetType().ToString()
             });
+
+            return youtubeService;
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
 
             // Validate input URL
             if (!IsValidYoutubeUrl(textBox1.Text))
@@ -74,7 +81,7 @@ namespace UrlArray
             {
                 if (IsValidYoutubeUrl(textBox1.Text))
                 {
-                    videoName = GetVideoName(youtubeService, textBox1.Text);
+                    videoName = GetVideoName(RegisterYT(), textBox1.Text);
                 }
                 else
                 {
@@ -210,13 +217,6 @@ namespace UrlArray
         {
             label1.Text = "Attempting to grab playlist";
 
-            // Register YouTube Service
-            var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-            {
-                ApiKey = "YOUR_API_KEY_HERE",
-                ApplicationName = this.GetType().ToString()
-            });
-
             // Get the playlist ID from the text box
             var playlistId = textBox3.Text;
             textBox3.Text = "Playlist ID";
@@ -228,7 +228,7 @@ namespace UrlArray
             try
             {
                 // Set up the request to retrieve the videos in the playlist
-                var playlistItemsListRequest = youtubeService.PlaylistItems.List("snippet");
+                var playlistItemsListRequest = RegisterYT().PlaylistItems.List("snippet");
                 playlistItemsListRequest.PlaylistId = playlistId;
                 playlistItemsListRequest.MaxResults = 500;
 
@@ -323,14 +323,5 @@ namespace UrlArray
             label3.Text = index.ToString();
         }
 
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }

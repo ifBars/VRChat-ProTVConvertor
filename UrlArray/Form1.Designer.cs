@@ -111,7 +111,6 @@ namespace UrlArray
             this.label2.Size = new System.Drawing.Size(87, 25);
             this.label2.TabIndex = 7;
             this.label2.Text = "Indexes:";
-            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // label3
             // 
@@ -122,7 +121,6 @@ namespace UrlArray
             this.label3.Size = new System.Drawing.Size(23, 25);
             this.label3.TabIndex = 8;
             this.label3.Text = "0";
-            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // button4
             // 
