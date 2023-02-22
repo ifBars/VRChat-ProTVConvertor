@@ -23,8 +23,9 @@
 ![image](https://user-images.githubusercontent.com/114284668/212461669-486d9c18-39f3-43a8-9be9-60d3dde40dda.png)
 
 SOURCE CODE USAGE:
-	1. Compile code and open the application: First make sure you have Visual Studio installed. Next, navigate to the folder containing ProTVConverter.sln, and 	    double click the file. Once the file has opened, press Project, and Build Solution. Once you have compiled the code, double-click on the exe file, in the    	 UrlArray\bin\Debug folder, to open the application.
 
+	1. Compile code and open the application: First make sure you have Visual Studio installed. Next, navigate to the folder containing ProTVConverter.sln, and 	    double click the file. Once the file has opened, press Project, and Build Solution. Once you have compiled the code, double-click on the exe file, in the    	 UrlArray\bin\Debug folder, to open the application.
+	
 	2. Add URLs to the list: Type or copy and paste the URL of a YouTube video or playlist into the “URL” field. If you wish, add a name for the video or playlist 	       into the “Name (Optional)” field. Once you have entered all desired information, click the “Add Link” button. If there is an error with your URL, the 		application will display a message telling you to input a valid URL.
 
 	3. Change the prefix (optional): If you wish to add a prefix to all of the URLs, type it into the “Prefix” field. If you are entering a full URL in the 	“Prefix” field, make sure it starts with “https” or else the application may not work.
