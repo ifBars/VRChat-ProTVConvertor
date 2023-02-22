@@ -1,5 +1,5 @@
 # ProTVConverter
- VRChat Youtube to ProTV Playlist Converter
+ VRChat Youtube to ProTV Playlist Converter, Comments, Questions, Concerns, Etc. Discord: P.Penguin#7468
  
  USAGE:
  
