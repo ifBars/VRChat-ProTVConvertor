@@ -1,5 +1,5 @@
 ﻿
-namespace UrlArray
+namespace ProTVConverter
 {
     partial class Form1
     {

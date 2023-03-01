@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{B4BF3E13-10B2-42A1-9197-4F245389ACFD}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>UrlArray</RootNamespace>
-    <AssemblyName>UrlArray</AssemblyName>
+    <RootNamespace>ProTVConverter</RootNamespace>
+    <AssemblyName>ProTVConverter</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -123,6 +123,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

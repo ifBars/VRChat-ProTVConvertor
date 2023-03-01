@@ -14,7 +14,7 @@ using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using System.Collections.Concurrent;
 
-namespace UrlArray
+namespace ProTVConverter
 {
     public partial class Form1 : Form
     {
@@ -31,11 +31,9 @@ namespace UrlArray
         string userInput = "urls";
         // Register real video name variable
         public static string realVideoTitle;
-        // Register playlist Items
-        List<PlaylistItem> playlistItems = new List<PlaylistItem>();
 
-        // Register Playlist Response
-        PlaylistItemListResponse playlistItemsListResponse;
+        // INPUT YOUR API KEY HERE
+        string keyAPI = "YOUR_API_KEY_HERE";
 
         // Initialize Form
         public Form1()
@@ -49,7 +47,7 @@ namespace UrlArray
             // Register YouTube Service
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = "YOUR_API_KEY_HERE",
+                ApiKey = keyAPI,
                 ApplicationName = this.GetType().ToString()
             });
 
@@ -210,6 +208,7 @@ namespace UrlArray
             {
                 MessageBox.Show("An error occurred while trying to access the file: Is the file open in another program?");
             }
+            GC.Collect();
             label1.Text = "File written successfully";
         }
 
@@ -232,29 +231,21 @@ namespace UrlArray
                 playlistItemsListRequest.PlaylistId = playlistId;
                 playlistItemsListRequest.MaxResults = 500;
 
-                // Set the PageToken property to an empty string to retrieve the first page of results
-                playlistItemsListRequest.PageToken = "";
-
-                // Execute the request in a background thread
+                // Execute the request in parallel
                 await Task.Run(async () =>
                 {
+                    var tasks = new List<Task>();
 
-                    // Initialize the counter variable
-                    var totalResults = 0;
-
-                    while (totalResults < 500)
+                    while (true)
                     {
                         // Execute the request
-                        playlistItemsListResponse = await playlistItemsListRequest.ExecuteAsync();
+                        var playlistItemsListResponse = await playlistItemsListRequest.ExecuteAsync();
 
                         // Add the results to the blocking collection
                         foreach (var playlistItem in playlistItemsListResponse.Items)
                         {
                             playlistItemsBuffer.Add(playlistItem);
                         }
-
-                        // Increment the counter variable
-                        totalResults += playlistItemsListResponse.Items.Count;
 
                         // Set the page token for the next request
                         playlistItemsListRequest.PageToken = playlistItemsListResponse.NextPageToken;
@@ -264,7 +255,25 @@ namespace UrlArray
                         {
                             break;
                         }
+
+                        // Execute the next request in parallel
+                        var task = Task.Run(async () =>
+                        {
+                            await playlistItemsListRequest.ExecuteAsync();
+                        });
+
+                        tasks.Add(task);
+
+                        // Limit the number of parallel requests
+                        if (tasks.Count >= 4)
+                        {
+                            await Task.WhenAny(tasks);
+                            tasks.RemoveAll(t => t.IsCompleted);
+                        }
                     }
+
+                    // Wait for any remaining requests to complete
+                    await Task.WhenAll(tasks);
                 });
 
                 // Complete the blocking collection to signal that no more items will be added
