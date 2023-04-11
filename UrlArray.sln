@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33403.182
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProTVUploader", "UrlArray\ProTVUploader.csproj", "{B4BF3E13-10B2-42A1-9197-4F245389ACFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProTVConvertor", "UrlArray\ProTVConvertor.csproj", "{B4BF3E13-10B2-42A1-9197-4F245389ACFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
