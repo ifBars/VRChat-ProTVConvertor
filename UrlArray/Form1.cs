@@ -34,7 +34,7 @@ namespace ProTVConverter
         public static string realVideoTitle;
 
         // INPUT YOUR API KEY HERE
-        string keyAPI = "AIzaSyAribhLCMFwNSyRWQ08tvDUorRg_36CPqA";
+        string keyAPI = "YOUR_API_KEY_HERE";
 
         // Initialize Form
         public Form1()
