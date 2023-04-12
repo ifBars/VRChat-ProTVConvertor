@@ -5,7 +5,7 @@ Installation
 - Run the setup.exe file to install the program.
 - Run the ProTVConvertor desktop icon
 
-	Usage
+Usage
 	1. Enter a single, full YouTube URL to add one URL to the list of URLs.
 	2. Optionally, add a prefix to put before the YouTube links (e.g., https://nextnex.com/?url=).
 	3. Press "Add Link" to add the one link.
