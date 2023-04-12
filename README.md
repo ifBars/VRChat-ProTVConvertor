@@ -14,10 +14,9 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
 -To set custom names for a playlist, tick "Use Custom Names" and load the playlist from the ID. It will then ask for a custom name for each song. If you do not want a custom name for that one, you can simply press enter.
 -To delete all URLs, press "Empty Links." This will not delete the file, but it will clear all current indexes and write over them every time you export to the same file.
 -If you are using URL Prefixes, make sure it is an HTTPS link like "https://nextnex.com/?url=", and make sure to put in your prefix before loading a playlist or link.
- 	
-	-For any questions, comments, concerns, etc, P.Penguin#0420
+ -For any questions, comments, concerns, etc, P.Penguin#0420
 	
-	-Quick Note: If you are using URL Prefixes, make sure it is an HTTPS link like https://nextnex.com/?url= as well as,
+	Quick Note: If you are using URL Prefixes, make sure it is an HTTPS link like https://nextnex.com/?url= as well as,
 	Make sure to put in your prefix before loading a playlist or link
 
 ![image](https://user-images.githubusercontent.com/114284668/212461669-486d9c18-39f3-43a8-9be9-60d3dde40dda.png)
