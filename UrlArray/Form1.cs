@@ -10,14 +10,18 @@ using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Security.Policy;
 using System.Drawing;
 using System.Text;
+using System.Threading;
+using System.Net.NetworkInformation;
 
 namespace ProTVConverter
 {
     public partial class Form1 : Form
     {
+
+        // Initialize Version Class
+        Version v = new Version("ifBars", "ProTVConvertor");
         // Url, Name, and Thumbnail Lists
         List<string> urlList = new List<string>();
         List<string> nameList = new List<string>();
@@ -32,6 +36,10 @@ namespace ProTVConverter
         string userInput = "urls";
         // Register real video name variable
         public static string realVideoTitle;
+        // Register fast export variable
+        public bool FastE = false;
+        // Register isExporting variable
+        public bool isExporting = false;
 
         // INPUT YOUR API KEY HERE
         string keyAPI = "YOUR_API_KEY_HERE";
@@ -58,81 +66,88 @@ namespace ProTVConverter
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Console.WriteLine("Link = " + textBox1.Text);
-
-            // Validate input URL
-            if (!IsValidYoutubeUrl(textBox1.Text))
+            if (isExporting == false)
             {
-                Console.WriteLine("Is NOT valid yt link");
-                if (!IsValidUrl(textBox1.Text))
+                // Console.WriteLine("Link = " + textBox1.Text);
+
+                // Validate input URL
+                if (!IsValidYoutubeUrl(textBox1.Text))
                 {
-                    MessageBox.Show("The URL is invalid. Please enter a valid YouTube or HTTP link.");
-                    return;
+                    // Console.WriteLine("Is NOT valid yt link");
+                    if (!IsValidUrl(textBox1.Text))
+                    {
+                        MessageBox.Show("The URL is invalid. Please enter a valid YouTube or HTTP link.");
+                        return;
+                    }
+
                 }
 
-            }
-
-            // Deleted/Private Video Check
-            string newLink = textBox1.Text;
-            if (IsValidYoutubeUrl(textBox1.Text))
-            {
-                if (GetVideoName(RegisterYT(), textBox1.Text) == "Deleted")
-                {
-                    MessageBox.Show("The link you entered has been removed from Youtube or is invalid.");
-                    textBox1.Text = "URL";
-                    textBox4.Text = "Name (Optional)";
-                    return;
-                }
-
-                if (GetVideoName(RegisterYT(), textBox1.Text) == "Private video")
-                {
-                    MessageBox.Show("The link you entered has been privated on Youtube or is invalid.");
-                    textBox1.Text = "URL";
-                    textBox4.Text = "Name (Optional)";
-                    return;
-                }
-
-                if (textBox1.Text.Contains("&list="))
-                {
-                    newLink = textBox1.Text.Substring(0, textBox1.Text.IndexOf("&list="));
-                }
-
-            }
-
-            // Get video name 
-            string videoName;
-
-            if (textBox4.Text != "" && textBox4.Text.Contains("Name (Optional)") == false)
-            {
-                videoName = textBox4.Text;
-            }
-            else
-            {
+                // Deleted/Private Video Check
+                string newLink = textBox1.Text;
                 if (IsValidYoutubeUrl(textBox1.Text))
                 {
-                    Console.WriteLine("Is valid yt link");
-                    videoName = GetVideoName(RegisterYT(), newLink);
+                    if (GetVideoName(RegisterYT(), textBox1.Text) == "Deleted")
+                    {
+                        MessageBox.Show("The link you entered has been removed from Youtube or is invalid.");
+                        textBox1.Text = "URL";
+                        textBox4.Text = "Name (Optional)";
+                        return;
+                    }
+
+                    if (GetVideoName(RegisterYT(), textBox1.Text) == "Private video")
+                    {
+                        MessageBox.Show("The link you entered has been privated on Youtube or is invalid.");
+                        textBox1.Text = "URL";
+                        textBox4.Text = "Name (Optional)";
+                        return;
+                    }
+
+                    if (textBox1.Text.Contains("&list="))
+                    {
+                        newLink = textBox1.Text.Substring(0, textBox1.Text.IndexOf("&list="));
+                    }
+
+                }
+
+                // Get video name 
+                string videoName;
+
+                if (textBox4.Text != "" && textBox4.Text.Contains("Name (Optional)") == false)
+                {
+                    videoName = textBox4.Text;
                 }
                 else
                 {
-                    videoName = "Video " + index.ToString();
+                    if (IsValidYoutubeUrl(textBox1.Text))
+                    {
+                        // Console.WriteLine("Is valid yt link");
+                        videoName = GetVideoName(RegisterYT(), newLink);
+                    }
+                    else
+                    {
+                        videoName = "Video " + index.ToString();
+                    }
                 }
+
+                // Get prefix
+                prefix = textBox2.Text.Contains("https") ? textBox2.Text : "";
+
+                // Add the URL from the text box to the list
+                label1.Text = "Adding Link";
+                urlList.Insert(index, "@" + prefix + newLink);
+                nameList.Insert(index, videoName);
+
+                // Clearing up
+                textBox1.Text = "URL";
+                textBox4.Text = "Name (Optional)";
+                label1.Text = "Link added";
+                index++;
+                label3.Text = index.ToString();
             }
-
-            // Get prefix
-            prefix = textBox2.Text.Contains("https") ? textBox2.Text : "";
-
-            // Add the URL from the text box to the list
-            label1.Text = "Adding Link";
-            urlList.Insert(index, "@" + prefix + newLink);
-            nameList.Insert(index, videoName);
-
-            // Clearing up
-            textBox1.Text = "URL";
-            textBox4.Text = "Name (Optional)";
-            label1.Text = "Link added";
-            index++;
-            label3.Text = index.ToString();
+            else
+            {
+                MessageBox.Show("Program is currently exporting, please wait until it is finished!");
+            }
         }
 
         private bool IsValidYoutubeUrl(string url)
@@ -161,24 +176,39 @@ namespace ProTVConverter
 
         private string GetVideoName(YouTubeService youtubeService, string url)
         {
-            var videoRequest = youtubeService.Videos.List("snippet");
-
-            // Parse video id from URL
-            string videoId = Regex.Match(url, @"v=([^&]+)").Groups[1].Value;
-            videoRequest.Id = videoId;
-
-            // Grab video name
-            var videoResponse = videoRequest.Execute();
-
-            if (videoResponse.Items.Count > 0)
+            try
             {
-                var video = videoResponse.Items[0];
-                return video.Snippet.Title;
+                var videoRequest = youtubeService.Videos.List("snippet");
+
+                // Parse video id from URL
+                string videoId = Regex.Match(url, @"v=([^&]+)").Groups[1].Value;
+                videoRequest.Id = videoId;
+
+                // Grab video name
+                var videoResponse = videoRequest.Execute();
+
+                if (videoResponse.Items.Count > 0)
+                {
+                    var video = videoResponse.Items[0];
+                    return video.Snippet.Title;
+                }
+                else
+                {
+                    // Handle error scenario
+                    return "Deleted video";
+                }
             }
-            else
+            catch (Google.GoogleApiException ex)
             {
-                // Handle error scenario
-                return "Deleted video";
+                if (ex.HttpStatusCode == HttpStatusCode.BadRequest && ex.Message.Contains("API key expired"))
+                {
+                    MessageBox.Show("API Limit Reached. Please try again later.");
+                }
+                else
+                {
+                    MessageBox.Show("An error occurred while trying to access the YouTube API: " + ex.Message);
+                }
+                return "API Error";
             }
         }
 
@@ -204,123 +234,289 @@ namespace ProTVConverter
             var thumbnailPath = Path.Combine(filePath2, thumbnailName);
 
             thumbnailList.Add(thumbnailName);
+            int num = int.Parse(label9.Text);
+            num++;
+
+            // Invoke the method that updates the label9 control from the UI thread
+            label9.Invoke(new Action(() =>
+            {
+                label9.Text = num.ToString();
+                this.Update();
+            }));
 
             using (var client = new WebClient())
             {
                 client.DownloadFile(thumbnailUrl, thumbnailPath);
             }
-
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        public bool checkApi()
         {
-            label1.Text = "Writing to file, please wait";
-
-            // Check if user prefix exists
-            if (textBox2.Text.Contains("https"))
+            var apiKey = keyAPI;
+            string videoName = GetVideoName(RegisterYT(), "https://www.youtube.com/watch?v=5WPbqYoz9HA");
+            if (videoName == "Bush - Machinehead")
             {
-                prefix = textBox2.Text;
+                return true;
             }
-
-            if (textBox5.Text.Contains("File Name (No Need for .txt)") == false)
+            else
             {
-                userInput = textBox5.Text;
+                return false;
             }
+        }
 
-            // Create a new FolderBrowserDialog
-            var folderBrowserDialog1 = new FolderBrowserDialog();
-
-            string folderPath = "";
-
-            // Show the dialog
-            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
-            {
-                // Get the selected folder path
-                folderPath = folderBrowserDialog1.SelectedPath;
-
-                // Append the file name to the folder path
-                filePath = Path.Combine(folderPath, userInput + ".txt");
-            }
-
-            // Make sure the lists are the same length
-            if (urlList.Count != nameList.Count)
-            {
-                MessageBox.Show("Error: lists are not the same length");
-                return;
-            }
-
+        public static bool IsInternetAvailable()
+        {
             try
             {
-
-                if (checkBox2.Checked == true)
+                using (var ping = new Ping())
                 {
-                    foreach (string url in urlList)
-                    {
-
-                        Console.WriteLine(url + " - Checkbox is checked | Valid Link Check - " + IsValidYoutubeUrl(url));
-                        if (IsValidYoutubeUrl(url))
-                        {
-                            if (GetVideoName(RegisterYT(), url) != "Deleted video" || GetVideoName(RegisterYT(), url) != "Private video")
-                            {
-                                Console.WriteLine("Grabbing thumbnail");
-                                GetVideoThumbnail(RegisterYT(), url, folderPath);
-                            }
-                        }
-                    }
+                    var reply = ping.Send("8.8.8.8", 2000);
+                    return reply.Status == IPStatus.Success;
                 }
-
-                using (StreamWriter sw = new StreamWriter(filePath))
-                {
-                    StringBuilder sb = new StringBuilder();
-
-                    for (int i = 0; i < urlList.Count; i++)
-                    {
-                        if (IsValidYoutubeUrl(urlList[i]))
-                        {
-                            if (GetVideoName(RegisterYT(), urlList[i]) == "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) == "Private video" || GetVideoName(RegisterYT(), urlList[i]) == "")
-                            {
-                                if (checkBox3.Checked == true)
-                                {
-                                    urlList.Remove(urlList[i]);
-                                }
-                                else
-                                {
-                                    MessageBox.Show("The video " + urlList[i] + " is either deleted or private.");
-                                }
-                            }
-                        }
-
-                        sb.AppendLine(urlList[i]);
-                        sb.AppendLine(nameList[i]);
-
-                        if (IsValidYoutubeUrl(urlList[i]))
-                        {
-                            if (checkBox2.Checked == true)
-                            {
-                                if (thumbnailList.Count > i)
-                                {
-                                    sb.AppendLine(thumbnailList[i]);
-                                }
-                            }
-                        }
-
-                        sb.AppendLine("");
-                        int num = int.Parse(label8.Text);
-                        num++;
-                        label8.Text = num.ToString();
-                    }
-
-                    sw.Write(sb.ToString());
-                }
-
-                textBox5.Text = "File Name (No Need for .txt)";
-                MessageBox.Show("File has been successfully exported!");
-                label1.Text = "File written successfully";
-                label8.Text = "0";
             }
-            catch (IOException)
+            catch
             {
-                MessageBox.Show("An error occurred while trying to access the file: Is the file open in another program?");
+                return false;
+            }
+        }
+
+        private async void button2_Click(object sender, EventArgs e)
+        {
+            int count = 0;
+
+            if (isExporting == false)
+            {
+                isExporting = true;
+                checkBox2.Enabled = false;
+                checkBox3.Enabled = false;
+                // Check if user prefix exists
+                if (textBox2.Text.Contains("https"))
+                {
+                    prefix = textBox2.Text;
+                }
+
+                if (textBox5.Text.Contains("File Name (No Need for .txt)") == false)
+                {
+                    userInput = textBox5.Text;
+                }
+
+                // Create a new FolderBrowserDialog
+                var folderBrowserDialog1 = new FolderBrowserDialog();
+
+                string folderPath = "";
+
+                // Show the dialog
+                if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    // Get the selected folder path
+                    folderPath = folderBrowserDialog1.SelectedPath;
+
+                    // Append the file name to the folder path
+                    filePath = Path.Combine(folderPath, userInput + ".txt");
+                }
+                else
+                {
+                    // MessageBox.Show("Error: No folder path selected, please select a path for the file!");
+                    isExporting = false;
+                    checkBox2.Enabled = true;
+                    checkBox3.Enabled = true;
+                    return;
+                }
+
+                // Make sure the lists are the same length
+                if (urlList.Count != nameList.Count)
+                {
+                    MessageBox.Show("Error: lists are not the same length");
+                    string logFilePath = CreateLogFile();
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("Error message: Error: lists are not the same length");
+                    sb.AppendLine("URL " + urlList.Count + " NAME " + nameList.Count + " THUMBNAIL " + thumbnailList.Count);
+                    File.AppendAllText(logFilePath, sb.ToString());
+                    isExporting = false;
+                    checkBox2.Enabled = true;
+                    checkBox3.Enabled = true;
+                    return;
+                }
+
+                if (checkBox3.Checked == true)
+                {
+                    label1.Text = "Removing invalid links";
+                            for (int i = 0; i < urlList.Count; i++)
+                            {
+                                if (IsValidYoutubeUrl(urlList[i]))
+                                {
+                                    string videoName = GetVideoName(RegisterYT(), urlList[i]);
+
+                                    if (videoName == "Deleted video" || videoName == "Private video" || videoName == "")
+                                    {
+                                        urlList.RemoveAt(i);
+                                        nameList.RemoveAt(i);
+                                        index = index - 1;
+                                        label3.Text = index.ToString();
+                                        Interlocked.Increment(ref count);
+                                        Invoke(new Action(() => label20.Text = count.ToString()));
+                                    }
+                                }
+                            }
+                }
+
+                if (FastE == false)
+                {
+                    try
+                    {
+
+                        if (checkBox2.Checked == true)
+                        {
+                            label1.Text = "Downloading thumbnails";
+                            await Task.Run(() =>
+                            {
+                                for (int i = 0; i < urlList.Count; i++)
+                                {
+                                    if (IsValidYoutubeUrl(urlList[i]))
+                                    {
+                                        if (GetVideoName(RegisterYT(), urlList[i]) != "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) != "Private video")
+                                        {
+                                            GetVideoThumbnail(RegisterYT(), urlList[i], folderPath);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        List<string> invalidUrls = new List<string>();
+
+                        label1.Text = "Packing videos to file";
+                        await Task.Run(() =>
+                        {
+                            StringBuilder sb = new StringBuilder();
+
+                            for (int i = 0; i < urlList.Count; i++)
+                            {
+
+                                sb.AppendLine(urlList[i]);
+                                sb.AppendLine(nameList[i]);
+
+                                if (IsValidYoutubeUrl(urlList[i]))
+                                {
+                                    if (checkBox2.Checked == true)
+                                    {
+                                        if (thumbnailList.Count > i)
+                                        {
+                                            sb.AppendLine(thumbnailList[i]);
+                                        }
+                                    }
+                                }
+
+                                sb.AppendLine("");
+                                Interlocked.Increment(ref count);
+                                Invoke(new Action(() => label8.Text = count.ToString()));
+                            }
+
+                            using (StreamWriter sw = new StreamWriter(filePath))
+                            {
+                                sw.Write(sb.ToString());
+                            }
+                        });
+
+                        textBox5.Text = "File Name (No Need for .txt)";
+                        Invoke(new Action(() => MessageBox.Show("File has been successfully exported to " + userInput + ".txt")));
+                        label1.Text = "File written successfully";
+                        isExporting = false;
+                        checkBox2.Enabled = true;
+                        checkBox3.Enabled = true;
+                        label8.Text = "0";
+                        label9.Text = "0";
+                        label20.Text = "0";
+                    }
+                    catch (IOException)
+                    {
+                        Invoke(new Action(() => MessageBox.Show("An error occurred while trying to access the file: Is the file open in another program?")));
+                    }
+                }
+                else
+                {
+                    try
+                    {
+
+                        if (checkBox2.Checked == true)
+                        {
+                            label1.Text = "Downloading thumbnails";
+                            var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
+                            Parallel.For(0, urlList.Count, options, async i =>
+                            {
+                                if (IsValidYoutubeUrl(urlList[i]))
+                                {
+                                    if (GetVideoName(RegisterYT(), urlList[i]) != "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) != "Private video")
+                                    {
+                                        GetVideoThumbnail(RegisterYT(), urlList[i], folderPath);
+                                    }
+                                }
+                            });
+                        }
+
+                        using (StreamWriter sw = new StreamWriter(filePath))
+                        {
+                            SemaphoreSlim semaphore = new SemaphoreSlim(1); // Limit to 1 concurrent write operation
+                            var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
+                            Parallel.For(0, urlList.Count, options, async i =>
+                            {
+                                StringBuilder sb = new StringBuilder(); // Create a new StringBuilder for each iteration
+
+                                sb.AppendLine(urlList[i]);
+                                sb.AppendLine(nameList[i]);
+
+                                if (IsValidYoutubeUrl(urlList[i]))
+                                {
+                                    if (checkBox2.Checked == true)
+                                    {
+                                        if (thumbnailList.Count > i)
+                                        {
+                                            sb.AppendLine(thumbnailList[i]);
+                                        }
+                                    }
+                                }
+
+                                sb.AppendLine("");
+
+                                string entry = sb.ToString();
+                                sb.AppendLine("");
+                                Interlocked.Increment(ref count);
+                                Invoke(new Action(() => label8.Text = count.ToString()));
+
+                                // Acquire the semaphore to write to the file
+                                semaphore.Wait();
+
+                                try
+                                {
+                                    sw.Write(entry);
+                                }
+                                finally
+                                {
+                                    // Release the semaphore
+                                    semaphore.Release();
+                                }
+                            });
+                        }
+
+                        textBox5.Text = "File Name (No Need for .txt)";
+                        MessageBox.Show("File has been successfully exported!");
+                        label1.Text = "File written successfully";
+                        label8.Text = "0";
+                        label9.Text = "0";
+                        label20.Text = "0";
+                        isExporting = false;
+                        checkBox2.Enabled = true;
+                        checkBox3.Enabled = true;
+                    }
+                    catch (IOException)
+                    {
+                        MessageBox.Show("An error occurred while trying to access the file: Is the file open in another program?");
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Program is currently exporting, please wait until it is finished!");
             }
         }
 
@@ -349,139 +545,202 @@ namespace ProTVConverter
             return logFilePath;
         }
 
+        public string GetPlaylistID(string entry)
+        {
+            string playlistID = "";
+
+            // Check if the entry is a playlist ID
+            if (entry.Length == 34)
+            {
+                playlistID = entry;
+            }
+
+            // Check if the entry is a full playlist URL
+            else if (entry.Contains("youtube.com/playlist?list="))
+            {
+                var uri = new Uri(entry);
+                var query = uri.Query;
+                if (query.StartsWith("?"))
+                {
+                    query = query.Substring(1);
+                }
+                var parameters = query.Split('&');
+                foreach (var parameter in parameters)
+                {
+                    var pair = parameter.Split('=');
+                    if (pair.Length == 2 && pair[0] == "list")
+                    {
+                        playlistID = pair[1];
+                        break;
+                    }
+                }
+            }
+
+            // Check if the entry is a playlist URL parameter
+            else if (entry.Contains("st="))
+            {
+                int index = entry.IndexOf("st=") + 3;
+                var playlistIDParam = entry.Substring(index);
+                playlistID = playlistIDParam;
+            }
+
+            // Input format not recognized
+            return playlistID;
+        }
+
         private async void button3_Click(object sender, EventArgs e)
         {
-            label1.Text = "Attempting to grab playlist";
-
-            // Get the playlist ID from the text box
-            var playlistId = textBox3.Text;
-            textBox3.Text = "Playlist ID";
-
-            // Initialize the blocking collection to hold the results
-            var playlistItemsBuffer = new BlockingCollection<PlaylistItem>();
-
-            // Try playlist ID and throw error if Incorrect
-            try
+            if (isExporting == false)
             {
-                // Set up the request to retrieve the videos in the playlist
-                var playlistItemsListRequest = RegisterYT().PlaylistItems.List("snippet");
-                playlistItemsListRequest.PlaylistId = playlistId;
-                playlistItemsListRequest.MaxResults = 500;
+                label1.Text = "Attempting to grab playlist";
 
-                // Execute the request in parallel
-                await Task.Run(async () =>
+                // Get the playlist ID from the text box
+                var playlistId = GetPlaylistID(textBox3.Text);
+                textBox3.Text = "Playlist ID Or Link";
+                Console.WriteLine("Playlist ID - " + playlistId);
+
+                // Initialize the blocking collection to hold the results
+                var playlistItemsBuffer = new BlockingCollection<PlaylistItem>();
+
+                // Try playlist ID and throw error if Incorrect
+                try
                 {
-                    var tasks = new List<Task>();
+                    // Set up the request to retrieve the videos in the playlist
+                    var playlistItemsListRequest = RegisterYT().PlaylistItems.List("snippet");
+                    playlistItemsListRequest.PlaylistId = playlistId;
+                    playlistItemsListRequest.MaxResults = 500;
 
-                    while (true)
+                    // Execute the request in parallel
+                    await Task.Run(async () =>
                     {
-                        // Execute the request
-                        var playlistItemsListResponse = await playlistItemsListRequest.ExecuteAsync();
+                        var tasks = new List<Task>();
 
-                        // Add the results to the blocking collection
-                        foreach (var playlistItem in playlistItemsListResponse.Items)
+                        while (true)
                         {
-                            playlistItemsBuffer.Add(playlistItem);
+                            // Execute the request
+                            var playlistItemsListResponse = await playlistItemsListRequest.ExecuteAsync();
+
+                            // Add the results to the blocking collection
+                            foreach (var playlistItem in playlistItemsListResponse.Items)
+                            {
+                                playlistItemsBuffer.Add(playlistItem);
+                            }
+
+                            // Set the page token for the next request
+                            playlistItemsListRequest.PageToken = playlistItemsListResponse.NextPageToken;
+
+                            // If there are no more pages, break out of the loop
+                            if (string.IsNullOrEmpty(playlistItemsListResponse.NextPageToken))
+                            {
+                                break;
+                            }
+
+                            // Execute the next request in parallel
+                            var task = Task.Run(async () =>
+                            {
+                                await playlistItemsListRequest.ExecuteAsync();
+                            });
+
+                            tasks.Add(task);
+
+                            // Limit the number of parallel requests
+                            if (tasks.Count >= 4)
+                            {
+                                await Task.WhenAny(tasks);
+                                tasks.RemoveAll(t => t.IsCompleted);
+                            }
                         }
 
-                        // Set the page token for the next request
-                        playlistItemsListRequest.PageToken = playlistItemsListResponse.NextPageToken;
+                        // Wait for any remaining requests to complete
+                        await Task.WhenAll(tasks);
+                    });
 
-                        // If there are no more pages, break out of the loop
-                        if (string.IsNullOrEmpty(playlistItemsListResponse.NextPageToken))
-                        {
-                            break;
-                        }
+                    // Complete the blocking collection to signal that no more items will be added
+                    playlistItemsBuffer.CompleteAdding();
+                    label1.Text = "Playlist Grabbed";
 
-                        // Execute the next request in parallel
-                        var task = Task.Run(async () =>
-                        {
-                            await playlistItemsListRequest.ExecuteAsync();
-                        });
+                    // Update the UI with the results (if needed)
+                }
+                catch (GoogleApiException ev)
+                {
+                    if (ev.Error.Code == 404)
+                    {
+                        MessageBox.Show("Invalid playlist ID. Is the playlist private? All playlists must be public to grab.");
+                    }
+                    else
+                    {
+                        MessageBox.Show("An error occurred: " + ev.Message + "\n\nPlease check your internet connection or API key.");
 
-                        tasks.Add(task);
+                        // Log the exception to a file
+                        string logFilePath = CreateLogFile();
+                        StringBuilder sb = new StringBuilder();
+                        string logMessage = string.Format("Error message: {0}\nStack trace: {1}\n\n", ev.Message, ev.StackTrace);
+                        sb.AppendLine(logMessage);
+                        sb.AppendLine("API KEY VALID " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
+                        File.AppendAllText(logFilePath, logMessage);
+                    }
+                }
 
-                        // Limit the number of parallel requests
-                        if (tasks.Count >= 4)
-                        {
-                            await Task.WhenAny(tasks);
-                            tasks.RemoveAll(t => t.IsCompleted);
-                        }
+                // Print the title and URL of each video in the playlist
+                foreach (var playlistItem in playlistItemsBuffer.GetConsumingEnumerable())
+                {
+
+                    string videoTitle = "";
+                    realVideoTitle = playlistItem.Snippet.Title;
+
+                    // Deleted/Private Video Check
+                    if (realVideoTitle == "Deleted")
+                    {
+                        return;
                     }
 
-                    // Wait for any remaining requests to complete
-                    await Task.WhenAll(tasks);
-                });
+                    if (realVideoTitle == "Private video")
+                    {
+                        return;
+                    }
 
-                // Complete the blocking collection to signal that no more items will be added
-                playlistItemsBuffer.CompleteAdding();
-                label1.Text = "Playlist Grabbed";
+                    if (checkBox1.Checked == true)
+                    {
+                        Form2 f2 = new Form2();
+                        videoTitle = f2.openName();
+                    }
+                    else
+                    {
+                        videoTitle = realVideoTitle;
+                    }
 
-                // Update the UI with the results (if needed)
+
+                    var videoId = playlistItem.Snippet.ResourceId.VideoId;
+                    var videoUrl = "https://www.youtube.com/watch?v=" + videoId;
+                    urlList.Insert(index, "@" + prefix + videoUrl);
+                    nameList.Insert(index, videoTitle);
+                    index++;
+                    label3.Text = index.ToString();
+                    this.Update();
+                }
             }
-            catch (GoogleApiException ev)
+            else
             {
-                if (ev.Error.Code == 404)
-                {
-                    MessageBox.Show("Invalid playlist ID. Is the playlist private? All playlists must be public to grab.");
-                }
-                else
-                {
-                    MessageBox.Show("An error occurred: " + ev.Message + "\n\nPlease check your internet connection or API key.");
-
-                    // Log the exception to a file
-                    string logFilePath = CreateLogFile();
-                    string logMessage = string.Format("Error message: {0}\nStack trace: {1}\n\n", ev.Message, ev.StackTrace);
-                    File.AppendAllText(logFilePath, logMessage);
-                }
-            }
-
-            // Print the title and URL of each video in the playlist
-            foreach (var playlistItem in playlistItemsBuffer.GetConsumingEnumerable())
-            {
-
-                string videoTitle = "";
-                realVideoTitle = playlistItem.Snippet.Title;
-
-                // Deleted/Private Video Check
-                if (realVideoTitle == "Deleted")
-                {
-                    return;
-                }
-
-                if (realVideoTitle == "Private video")
-                {
-                    return;
-                }
-
-                if (checkBox1.Checked == true)
-                {
-                    Form2 f2 = new Form2();
-                    videoTitle = f2.openName();
-                }
-                else
-                {
-                    videoTitle = realVideoTitle;
-                }
-
-
-                var videoId = playlistItem.Snippet.ResourceId.VideoId;
-                var videoUrl = "https://www.youtube.com/watch?v=" + videoId;
-                urlList.Insert(index, "@" + prefix + videoUrl);
-                nameList.Insert(index, videoTitle);
-                index++;
-                label3.Text = index.ToString();
+                MessageBox.Show("Program is currently exporting, please wait until it is finished!");
             }
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
-            // Clear all URLS
-            urlList.Clear();
-            nameList.Clear();
-            index = 0;
-            label3.Text = index.ToString();
-            GC.Collect();
+            DialogResult result = MessageBox.Show("WARNING: This will remove all previously entered links, do you want to continue?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (result == DialogResult.Yes)
+            {
+                // Clear all URLS
+                urlList.Clear();
+                nameList.Clear();
+                index = 0;
+                label3.Text = index.ToString();
+                GC.Collect();
+            }
+            else
+            {
+                return;
+            }
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -493,6 +752,8 @@ namespace ProTVConverter
                 panel1.BackColor = SystemColors.ControlDarkDark;
                 panel2.BackColor = SystemColors.ControlDarkDark;
                 panel3.BackColor = SystemColors.ControlDarkDark;
+                panel4.BackColor = SystemColors.ControlDarkDark;
+                panel5.BackColor = SystemColors.ControlDarkDark;
             }
             else
             {
@@ -501,6 +762,87 @@ namespace ProTVConverter
                 panel1.BackColor = SystemColors.Control;
                 panel2.BackColor = SystemColors.Control;
                 panel3.BackColor = SystemColors.Control;
+                panel4.BackColor = SystemColors.Control;
+                panel5.BackColor = SystemColors.Control;
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            if (IsInternetAvailable() == true)
+            {
+                label14.Text = "Connected";
+                label14.ForeColor = Color.DarkGreen;
+            }
+            else
+            {
+                label14.Text = "Disconnected";
+                label14.ForeColor = Color.Red;
+            }
+
+            if (checkApi() == true)
+            {
+                label13.Text = "Working";
+                label13.ForeColor = Color.DarkGreen;
+            }
+            else
+            {
+                label13.Text = "Invalid or Expired";
+                label13.ForeColor = Color.Red;
+            }
+
+            GC.Collect();
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            if (isExporting == false)
+            {
+                if (FastE == false)
+                {
+                    DialogResult result = MessageBox.Show("WARNING: This can cause the program to freeze during export when exporting large amounts of links, do you want to continue?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.Yes)
+                    {
+                        FastE = true;
+                        button7.Text = "Disable Fast Export";
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    FastE = false;
+                    button7.Text = "Enable Fast Export";
+                }
+            }
+            else
+            {
+                MessageBox.Show("Program is currently exporting to file, please enable/disable fast mode after.");
+            }
+        }
+
+        private async void button6_Click(object sender, EventArgs e)
+        {
+            var updateTask = v.checkUpdate();
+            string update = await updateTask;
+            MessageBox.Show(update);
+        }
+
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        {
+            if (isExporting == true)
+            {
+                MessageBox.Show("Program is currently exporting, please wait until it is finished!");
+            }
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (isExporting == true)
+            {
+                MessageBox.Show("Program is currently exporting, please wait until it is finished!");
             }
         }
     }
