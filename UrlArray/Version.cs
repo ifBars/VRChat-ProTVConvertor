@@ -33,7 +33,7 @@ namespace ProTVConverter
 
         public string getVersion()
         {
-            string ver = "v2.1.0BETA";
+            string ver = "v2.2.0";
             return ver;
         }
 
@@ -41,25 +41,6 @@ namespace ProTVConverter
         {
             var latestVersion = await GetLatestReleaseVersion();
             string update = latestVersion != getVersion() ? $"An update is available ({latestVersion})" : "No updates available";
-            if (latestVersion != getVersion())
-            {
-                Console.WriteLine();
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("=======================================");
-                Console.WriteLine("|            UPDATE AVAILABLE         |");
-                Console.WriteLine("=======================================");
-                Console.ResetColor();
-                Console.WriteLine($"New version: {latestVersion}");
-                Console.WriteLine();
-                Console.WriteLine("Press any key to continue...");
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("No updates available");
-                Console.ResetColor();
-                Console.WriteLine("Press any key to continue...");
-            }
             return update;
         }
     }
