@@ -4,9 +4,9 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
 
 # Installation
 
-Download the installer.exe file from the ProTVConvertor repository.
-Run the installer.exe file to install the program.
-Run the ProTVConvertor desktop icon.
+1. Download the installer.exe file from the ProTVConvertor repository.
+2. Run the installer.exe file to install the program.
+3. Run the ProTVConvertor desktop icon.
 
 # Usage
 
