@@ -14,6 +14,7 @@ using System.Drawing;
 using System.Text;
 using System.Threading;
 using System.Net.NetworkInformation;
+using System.Linq;
 
 namespace ProTVConverter
 {
@@ -202,59 +203,100 @@ namespace ProTVConverter
             {
                 if (ex.HttpStatusCode == HttpStatusCode.BadRequest && ex.Message.Contains("API key expired"))
                 {
-                    MessageBox.Show("API Limit Reached. Please try again later.");
+                    MessageBox.Show("API key is expired!");
+                    return "API Error";
+                }
+                else if (ex.Message.Contains("quota"))
+                {
+                    MessageBox.Show("Daily API Limit Reached. Please try again tomorrow.");
+                    return "API Error";
                 }
                 else
                 {
                     MessageBox.Show("An error occurred while trying to access the YouTube API: " + ex.Message);
+                    return "API Error";
                 }
-                return "API Error";
             }
         }
 
-        private void GetVideoThumbnail(YouTubeService youtubeService, string url, string filePath)
+        private string GetVideoThumbnail(YouTubeService youtubeService, string url, string filePath)
         {
-            // Parse video id from URL
-            string videoId = Regex.Match(url, @"v=([^&]+)").Groups[1].Value;
-
-            var request = youtubeService.Videos.List("snippet");
-            request.Id = videoId;
-            var response = request.Execute();
-
-            if (response.Items.Count == 0)
+            try
             {
-                // MessageBox.Show("The thumbnail for " + url + " could not be downloaded. Is the video deleted?");
-                return;
+                // Parse video id from URL
+                string videoId = Regex.Match(url, @"v=([^&]+)").Groups[1].Value;
+
+                var request = youtubeService.Videos.List("snippet");
+                request.Id = videoId;
+                var response = request.Execute();
+
+                if (response.Items.Count == 0)
+                {
+                    // MessageBox.Show("The thumbnail for " + url + " could not be downloaded. Is the video deleted?");
+                    return null;
+                }
+
+                var thumbnailUrl = response.Items[0].Snippet.Thumbnails.Default__.Url;
+                var thumbnailName = $"{videoId}.jpg";
+                var filePath2 = Path.Combine(filePath, "thumbnails");
+                Directory.CreateDirectory(filePath2);
+                var thumbnailPath = Path.Combine(filePath2, thumbnailName);
+
+                try
+                {
+                    using (var client = new WebClient())
+                    {
+                        client.DownloadFile(thumbnailUrl, thumbnailPath);
+                    }
+
+                    int num = Directory.GetFiles(filePath2).Length;
+                    // Invoke the method that updates the label9 control from the UI thread
+                    label9.Invoke(new Action(() =>
+                    {
+                        label9.Text = num.ToString();
+                        this.Update();
+                    }));
+                    return thumbnailName;
+                }
+                catch (Exception ex)
+                {
+                    // log the error or handle it as appropriate
+                    Console.WriteLine($"Error downloading thumbnail for {url}: {ex.Message}");
+                    return null;
+                }
             }
-
-            var thumbnailUrl = response.Items[0].Snippet.Thumbnails.Default__.Url;
-            var thumbnailName = $"{videoId}.jpg";
-            var filePath2 = Path.Combine(filePath, "thumbnails");
-            Directory.CreateDirectory(filePath2);
-            var thumbnailPath = Path.Combine(filePath2, thumbnailName);
-
-            thumbnailList.Add(thumbnailName);
-            int num = int.Parse(label9.Text);
-            num++;
-
-            // Invoke the method that updates the label9 control from the UI thread
-            label9.Invoke(new Action(() =>
+            catch (Google.GoogleApiException ex)
             {
-                label9.Text = num.ToString();
-                this.Update();
-            }));
+                if (ex.HttpStatusCode == HttpStatusCode.BadRequest && ex.Message.Contains("API key expired"))
+                {
+                    MessageBox.Show("API key is expired!");
+                    return "API Error";
+                }
+                else if (ex.Message.Contains("quota"))
+                {
+                    MessageBox.Show("Daily API Limit Reached. Please try again tomorrow.");
+                    return "API Error";
+                }
+                else
+                {
+                    MessageBox.Show("An error occurred: " + ex.Message + "\n\nPlease check your internet connection or API key.");
 
-            using (var client = new WebClient())
-            {
-                client.DownloadFile(thumbnailUrl, thumbnailPath);
+                    // Log the exception to a file
+                    string logFilePath = CreateLogFile();
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine(string.Format("Error message: {0}\nStack trace: {1}\n\n", ex.Message, ex.StackTrace));
+                    sb.AppendLine("API KEY VALID " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
+                    File.AppendAllText(logFilePath, sb.ToString());
+                    return "API Error";
+                }
             }
         }
 
         public bool checkApi()
         {
             var apiKey = keyAPI;
-            string videoName = GetVideoName(RegisterYT(), "https://www.youtube.com/watch?v=5WPbqYoz9HA");
-            if (videoName == "Bush - Machinehead")
+            string videoName = GetVideoName(RegisterYT(), "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+            if (videoName == "Rick Astley - Never Gonna Give You Up (Official Music Video)")
             {
                 return true;
             }
@@ -341,23 +383,58 @@ namespace ProTVConverter
                 if (checkBox3.Checked == true)
                 {
                     label1.Text = "Removing invalid links";
-                            for (int i = 0; i < urlList.Count; i++)
+                    if (FastE == false)
+                    {
+                        for (int i = 0; i < urlList.Count; i++)
+                        {
+                            if (IsValidYoutubeUrl(urlList[i]))
+                            {
+                                string videoName = GetVideoName(RegisterYT(), urlList[i]);
+
+                                if (videoName == "Deleted video" || videoName == "Private video" || videoName == "" || videoName == "API Error")
+                                {
+                                    urlList.RemoveAt(i);
+                                    nameList.RemoveAt(i);
+                                    index = index - 1;
+                                    label3.Text = index.ToString();
+                                    Interlocked.Increment(ref count);
+                                    Invoke(new Action(() => label20.Text = count.ToString()));
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        await Task.Run(() =>
+                        {
+                            var itemsToRemove = new ConcurrentBag<int>();
+
+                            Parallel.For(0, urlList.Count, i =>
                             {
                                 if (IsValidYoutubeUrl(urlList[i]))
                                 {
                                     string videoName = GetVideoName(RegisterYT(), urlList[i]);
 
-                                    if (videoName == "Deleted video" || videoName == "Private video" || videoName == "")
+                                    if (videoName == "Deleted video" || videoName == "Private video" || videoName == "" || videoName == "API Error")
                                     {
-                                        urlList.RemoveAt(i);
-                                        nameList.RemoveAt(i);
-                                        index = index - 1;
-                                        label3.Text = index.ToString();
+                                        itemsToRemove.Add(i);
                                         Interlocked.Increment(ref count);
                                         Invoke(new Action(() => label20.Text = count.ToString()));
                                     }
                                 }
+                            });
+
+                            // Remove the items that need to be removed
+                            foreach (int i in itemsToRemove.OrderByDescending(x => x))
+                            {
+                                urlList.RemoveAt(i);
+                                nameList.RemoveAt(i);
+                                Interlocked.Decrement(ref index);
                             }
+                        });
+
+                        label3.Text = index.ToString();
+                    }
                 }
 
                 if (FastE == false)
@@ -374,7 +451,7 @@ namespace ProTVConverter
                                 {
                                     if (IsValidYoutubeUrl(urlList[i]))
                                     {
-                                        if (GetVideoName(RegisterYT(), urlList[i]) != "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) != "Private video")
+                                        if (GetVideoName(RegisterYT(), urlList[i]) != "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) != "Private video" || GetVideoName(RegisterYT(), urlList[i]) != "API Error")
                                         {
                                             GetVideoThumbnail(RegisterYT(), urlList[i], folderPath);
                                         }
@@ -437,65 +514,91 @@ namespace ProTVConverter
                 {
                     try
                     {
-
                         if (checkBox2.Checked == true)
                         {
                             label1.Text = "Downloading thumbnails";
-                            var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
-                            Parallel.For(0, urlList.Count, options, async i =>
-                            {
-                                if (IsValidYoutubeUrl(urlList[i]))
+                            int numThumbnails = 0;
+                            var thumbnailNames = new List<string>();
+                            var semaphore = new SemaphoreSlim(4); // limit to 4 concurrent downloads
+                            var options = new ParallelOptions { MaxDegreeOfParallelism = 6 };
+                            await Task.Run(() =>
                                 {
-                                    if (GetVideoName(RegisterYT(), urlList[i]) != "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) != "Private video")
+                                    Parallel.For(0, urlList.Count, options, async (i, state) =>
                                     {
-                                        GetVideoThumbnail(RegisterYT(), urlList[i], folderPath);
-                                    }
-                                }
-                            });
+                                        if (IsValidYoutubeUrl(urlList[i]))
+                                        {
+                                            if (GetVideoName(RegisterYT(), urlList[i]) != "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) != "Private video" || GetVideoName(RegisterYT(), urlList[i]) != "APPI Error")
+                                            {
+                                                await semaphore.WaitAsync(); // wait until there's an available slot
+                                                try
+                                                {
+                                                    var thumbnailName = GetVideoThumbnail(RegisterYT(), urlList[i], folderPath);
+                                                    if (thumbnailName != null)
+                                                    {
+                                                        lock (thumbnailNames) thumbnailNames.Add(thumbnailName);
+                                                        Interlocked.Increment(ref numThumbnails);
+                                                    }
+                                                }
+                                                finally
+                                                {
+                                                    semaphore.Release(); // release the slot
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                            label9.Text = numThumbnails.ToString();
+                            thumbnailList.AddRange(thumbnailNames);
                         }
 
                         using (StreamWriter sw = new StreamWriter(filePath))
                         {
                             SemaphoreSlim semaphore = new SemaphoreSlim(1); // Limit to 1 concurrent write operation
                             var options = new ParallelOptions { MaxDegreeOfParallelism = 4 };
-                            Parallel.For(0, urlList.Count, options, async i =>
+                            var writeTasks = new List<Task>();
+                            for (int i = 0; i < urlList.Count; i++)
                             {
-                                StringBuilder sb = new StringBuilder(); // Create a new StringBuilder for each iteration
-
-                                sb.AppendLine(urlList[i]);
-                                sb.AppendLine(nameList[i]);
-
-                                if (IsValidYoutubeUrl(urlList[i]))
+                                int index = i; // Create a local copy of i for the lambda expression
+                                writeTasks.Add(Task.Run(async () =>
                                 {
-                                    if (checkBox2.Checked == true)
+                                    StringBuilder sb = new StringBuilder(); // Create a new StringBuilder for each iteration
+
+                                    sb.AppendLine(urlList[index]);
+                                    sb.AppendLine(nameList[index]);
+
+                                    if (IsValidYoutubeUrl(urlList[index]))
                                     {
-                                        if (thumbnailList.Count > i)
+                                        if (checkBox2.Checked == true)
                                         {
-                                            sb.AppendLine(thumbnailList[i]);
+                                            if (thumbnailList.Count > index)
+                                            {
+                                                sb.AppendLine(thumbnailList[index]);
+                                            }
                                         }
                                     }
-                                }
 
-                                sb.AppendLine("");
+                                    sb.AppendLine("");
 
-                                string entry = sb.ToString();
-                                sb.AppendLine("");
-                                Interlocked.Increment(ref count);
-                                Invoke(new Action(() => label8.Text = count.ToString()));
+                                    string entry = sb.ToString();
+                                    sb.AppendLine("");
+                                    Interlocked.Increment(ref count);
+                                    Invoke(new Action(() => label8.Text = count.ToString()));
 
-                                // Acquire the semaphore to write to the file
-                                semaphore.Wait();
+                                    // Acquire the semaphore to write to the file
+                                    await semaphore.WaitAsync();
 
-                                try
-                                {
-                                    sw.Write(entry);
-                                }
-                                finally
-                                {
-                                    // Release the semaphore
-                                    semaphore.Release();
-                                }
-                            });
+                                    try
+                                    {
+                                        await sw.WriteAsync(entry);
+                                    }
+                                    finally
+                                    {
+                                        // Release the semaphore
+                                        semaphore.Release();
+                                    }
+                                }));
+                            }
+                            await Task.WhenAll(writeTasks); // wait for all writes to complete
                         }
 
                         textBox5.Text = "File Name (No Need for .txt)";
@@ -666,6 +769,17 @@ namespace ProTVConverter
                     if (ev.Error.Code == 404)
                     {
                         MessageBox.Show("Invalid playlist ID. Is the playlist private? All playlists must be public to grab.");
+                        return;
+                    }
+                    else if (ev.HttpStatusCode == HttpStatusCode.BadRequest || ev.Message.Contains("API key expired"))
+                    {
+                        MessageBox.Show("API key is expired!");
+                        return;
+                    }
+                    else if (ev.Message.Contains("quota"))
+                    {
+                        MessageBox.Show("Daily API Limit Reached. Please try again tomorrow.");
+                        return;
                     }
                     else
                     {
@@ -677,7 +791,8 @@ namespace ProTVConverter
                         string logMessage = string.Format("Error message: {0}\nStack trace: {1}\n\n", ev.Message, ev.StackTrace);
                         sb.AppendLine(logMessage);
                         sb.AppendLine("API KEY VALID " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
-                        File.AppendAllText(logFilePath, logMessage);
+                        File.AppendAllText(logFilePath, sb.ToString());
+                        return;
                     }
                 }
 
@@ -735,7 +850,6 @@ namespace ProTVConverter
                 nameList.Clear();
                 index = 0;
                 label3.Text = index.ToString();
-                GC.Collect();
             }
             else
             {
@@ -787,11 +901,10 @@ namespace ProTVConverter
             }
             else
             {
-                label13.Text = "Invalid or Expired";
+                label13.Text = "Invalid";
                 label13.ForeColor = Color.Red;
             }
 
-            GC.Collect();
         }
 
         private void button7_Click(object sender, EventArgs e)
