@@ -33,7 +33,7 @@ namespace ProTVConverter
 
         public string getVersion()
         {
-            string ver = "v2.2.0";
+            string ver = "v2.3.0";
             return ver;
         }
 

@@ -382,7 +382,9 @@ namespace ProTVConverter
 
                 if (checkBox3.Checked == true)
                 {
-                    label1.Text = "Removing invalid links";
+                    int scannedIndex = urlList.Count;
+                    Invoke(new Action(() => label1.Text = "Removing invalid links " + scannedIndex));
+
                     if (FastE == false)
                     {
                         for (int i = 0; i < urlList.Count; i++)
@@ -401,13 +403,18 @@ namespace ProTVConverter
                                     Invoke(new Action(() => label20.Text = count.ToString()));
                                 }
                             }
+
+                            // Update the scannedIndex counter
+                            scannedIndex -= 1;
+                            Invoke(new Action(() => label1.Text = "Removing invalid links " + scannedIndex));
                         }
                     }
                     else
                     {
+                        var itemsToRemove = new ConcurrentBag<int>();
                         await Task.Run(() =>
                         {
-                            var itemsToRemove = new ConcurrentBag<int>();
+
 
                             Parallel.For(0, urlList.Count, i =>
                             {
@@ -422,19 +429,30 @@ namespace ProTVConverter
                                         Invoke(new Action(() => label20.Text = count.ToString()));
                                     }
                                 }
+
+                                // Update the scannedIndex counter
+                                Interlocked.Decrement(ref scannedIndex);
+                                Invoke(new Action(() => label1.Text = "Removing invalid links " + scannedIndex));
                             });
 
-                            // Remove the items that need to be removed
-                            foreach (int i in itemsToRemove.OrderByDescending(x => x))
-                            {
-                                urlList.RemoveAt(i);
-                                nameList.RemoveAt(i);
-                                Interlocked.Decrement(ref index);
-                            }
                         });
+
+                        await Task.Run(() =>
+                            {
+                                // Remove the items that need to be removed
+                                Parallel.ForEach(itemsToRemove.OrderByDescending(x => x), i =>
+                                {
+                                    urlList.RemoveAt(i);
+                                    nameList.RemoveAt(i);
+                                    Interlocked.Decrement(ref index);
+                                });
+                            });
 
                         label3.Text = index.ToString();
                     }
+
+                    // Update the label with the final scannedIndex value
+                    Invoke(new Action(() => label1.Text = "Scan complete " + urlList.Count + " links exported."));
                 }
 
                 if (FastE == false)
@@ -515,90 +533,90 @@ namespace ProTVConverter
                     try
                     {
                         if (checkBox2.Checked == true)
-{
-    label1.Text = "Downloading thumbnails";
-    int numThumbnails = 0;
-    var thumbnailNames = new List<string>();
-    var semaphore = new SemaphoreSlim(4); // limit to 4 concurrent downloads
-    foreach (var url in urlList)
-    {
-        if (IsValidYoutubeUrl(url))
-        {
-            if (GetVideoName(RegisterYT(), url) != "Deleted video" || GetVideoName(RegisterYT(), url) != "Private video" || GetVideoName(RegisterYT(), url) != "APPI Error")
-            {
-                await semaphore.WaitAsync(); // wait until there's an available slot
-                try
-                {
-                    var thumbnailName = GetVideoThumbnail(RegisterYT(), url, folderPath);
-                    if (thumbnailName != null)
-                    {
-                        lock (thumbnailNames) thumbnailNames.Add(thumbnailName);
-                        Interlocked.Increment(ref numThumbnails);
-
-                        using (var sw = new StreamWriter(filePath, true))
                         {
-                            StringBuilder sb = new StringBuilder();
+                            label1.Text = "Downloading thumbnails";
+                            int numThumbnails = 0;
+                            var thumbnailNames = new List<string>();
+                            var semaphore = new SemaphoreSlim(4); // limit to 4 concurrent downloads
+                            foreach (var url in urlList)
+                            {
+                                if (IsValidYoutubeUrl(url))
+                                {
+                                    if (GetVideoName(RegisterYT(), url) != "Deleted video" || GetVideoName(RegisterYT(), url) != "Private video" || GetVideoName(RegisterYT(), url) != "APPI Error")
+                                    {
+                                        await semaphore.WaitAsync(); // wait until there's an available slot
+                                        try
+                                        {
+                                            var thumbnailName = GetVideoThumbnail(RegisterYT(), url, folderPath);
+                                            if (thumbnailName != null)
+                                            {
+                                                lock (thumbnailNames) thumbnailNames.Add(thumbnailName);
+                                                Interlocked.Increment(ref numThumbnails);
 
-                            sb.AppendLine(url);
-                            sb.AppendLine(nameList[urlList.IndexOf(url)]);
-                            sb.AppendLine(thumbnailName);
-                            sb.AppendLine("");
+                                                using (var sw = new StreamWriter(filePath, true))
+                                                {
+                                                    StringBuilder sb = new StringBuilder();
 
-                            string entry = sb.ToString();
-                            Interlocked.Increment(ref count);
-                            Invoke(new Action(() => label8.Text = count.ToString()));
+                                                    sb.AppendLine(url);
+                                                    sb.AppendLine(nameList[urlList.IndexOf(url)]);
+                                                    sb.AppendLine(thumbnailName);
+                                                    sb.AppendLine("");
 
-                            await sw.WriteAsync(entry);
+                                                    string entry = sb.ToString();
+                                                    Interlocked.Increment(ref count);
+                                                    Invoke(new Action(() => label8.Text = count.ToString()));
+
+                                                    await sw.WriteAsync(entry);
+                                                }
+                                            }
+                                        }
+                                        finally
+                                        {
+                                            semaphore.Release(); // release the slot
+                                        }
+                                    }
+                                }
+                            }
+                            label9.Text = numThumbnails.ToString();
+                            thumbnailList.AddRange(thumbnailNames);
                         }
-                    }
-                }
-                finally
-                {
-                    semaphore.Release(); // release the slot
-                }
-            }
-        }
-    }
-    label9.Text = numThumbnails.ToString();
-    thumbnailList.AddRange(thumbnailNames);
-}
-else
-{
-    // Code for writing to the txt file when checkbox2 is not checked
-    using (var sw = new StreamWriter(filePath))
-    {
-        SemaphoreSlim semaphore = new SemaphoreSlim(1); // Limit to 1 concurrent write operation
-        var writeTasks = new List<Task>();
-        for (int i = 0; i < urlList.Count; i++)
-        {
-            int index = i; // Create a local copy of i for the lambda expression
-            writeTasks.Add(Task.Run(async () =>
-            {
-                StringBuilder sb = new StringBuilder(); // Create a new StringBuilder for each iteration
+                        else
+                        {
+                            // Code for writing to the txt file when checkbox2 is not checked
+                            using (var sw = new StreamWriter(filePath))
+                            {
+                                SemaphoreSlim semaphore = new SemaphoreSlim(1); // Limit to 1 concurrent write operation
+                                var writeTasks = new List<Task>();
+                                for (int i = 0; i < urlList.Count; i++)
+                                {
+                                    int index = i; // Create a local copy of i for the lambda expression
+                                    writeTasks.Add(Task.Run(async () =>
+                                    {
+                                        StringBuilder sb = new StringBuilder(); // Create a new StringBuilder for each iteration
 
-                sb.AppendLine(urlList[index]);
-                sb.AppendLine(nameList[index]);
-                sb.AppendLine("");
-                string entry = sb.ToString();
-                Interlocked.Increment(ref count);
-                Invoke(new Action(() => label8.Text = count.ToString()));
+                                        sb.AppendLine(urlList[index]);
+                                        sb.AppendLine(nameList[index]);
+                                        sb.AppendLine("");
+                                        string entry = sb.ToString();
+                                        Interlocked.Increment(ref count);
+                                        Invoke(new Action(() => label8.Text = count.ToString()));
 
-                // Acquire the semaphore to write to the file
-                await semaphore.WaitAsync();
-                try
-                {
-                    await sw.WriteAsync(entry);
-                }
-                finally
-                {
-                    // Release the semaphore
-                    semaphore.Release();
-                }
-            }));
-        }
-        await Task.WhenAll(writeTasks.ToArray()); // wait for all writes to complete
-    }
-}
+                                        // Acquire the semaphore to write to the file
+                                        await semaphore.WaitAsync();
+                                        try
+                                        {
+                                            await sw.WriteAsync(entry);
+                                        }
+                                        finally
+                                        {
+                                            // Release the semaphore
+                                            semaphore.Release();
+                                        }
+                                    }));
+                                }
+                                await Task.WhenAll(writeTasks.ToArray()); // wait for all writes to complete
+                            }
+                        }
 
                         textBox5.Text = "File Name (No Need for .txt)";
                         MessageBox.Show("File has been successfully exported!");
