@@ -542,7 +542,7 @@ namespace ProTVConverter
                             {
                                 if (IsValidYoutubeUrl(url))
                                 {
-                                    if (GetVideoName(RegisterYT(), url) != "Deleted video" || GetVideoName(RegisterYT(), url) != "Private video" || GetVideoName(RegisterYT(), url) != "APPI Error")
+                                    if (GetVideoName(RegisterYT(), url) != "Deleted video" || GetVideoName(RegisterYT(), url) != "Private video" || GetVideoName(RegisterYT(), url) != "API Error")
                                     {
                                         await semaphore.WaitAsync(); // wait until there's an available slot
                                         try
