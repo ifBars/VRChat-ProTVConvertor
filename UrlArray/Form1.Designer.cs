@@ -71,6 +71,7 @@ namespace ProTVConverter
             this.label16 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
+            this.button8 = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -219,7 +220,7 @@ namespace ProTVConverter
             this.panel1.Controls.Add(this.button1);
             this.panel1.Controls.Add(this.label4);
             this.panel1.Location = new System.Drawing.Point(6, 158);
-            this.panel1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(346, 307);
             this.panel1.TabIndex = 14;
@@ -244,7 +245,7 @@ namespace ProTVConverter
             this.panel2.Controls.Add(this.button3);
             this.panel2.Controls.Add(this.label5);
             this.panel2.Location = new System.Drawing.Point(355, 158);
-            this.panel2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel2.Margin = new System.Windows.Forms.Padding(2);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(346, 307);
             this.panel2.TabIndex = 15;
@@ -270,7 +271,7 @@ namespace ProTVConverter
             this.panel3.Controls.Add(this.button2);
             this.panel3.Controls.Add(this.textBox5);
             this.panel3.Location = new System.Drawing.Point(705, 158);
-            this.panel3.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel3.Margin = new System.Windows.Forms.Padding(2);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(346, 307);
             this.panel3.TabIndex = 16;
@@ -392,7 +393,7 @@ namespace ProTVConverter
             this.panel4.Controls.Add(this.label7);
             this.panel4.Controls.Add(this.label8);
             this.panel4.Location = new System.Drawing.Point(729, 4);
-            this.panel4.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel4.Margin = new System.Windows.Forms.Padding(2);
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(330, 150);
             this.panel4.TabIndex = 22;
@@ -425,7 +426,7 @@ namespace ProTVConverter
             this.panel5.Controls.Add(this.button6);
             this.panel5.Controls.Add(this.button5);
             this.panel5.Location = new System.Drawing.Point(8, 11);
-            this.panel5.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel5.Margin = new System.Windows.Forms.Padding(2);
             this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(280, 142);
             this.panel5.TabIndex = 23;
@@ -516,9 +517,9 @@ namespace ProTVConverter
             this.label16.Location = new System.Drawing.Point(832, 488);
             this.label16.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(190, 25);
+            this.label16.Size = new System.Drawing.Size(120, 25);
             this.label16.TabIndex = 28;
-            this.label16.Text = "P.Penguin#7468";
+            this.label16.Text = "p.penguin";
             // 
             // label17
             // 
@@ -542,12 +543,25 @@ namespace ProTVConverter
             this.label18.TabIndex = 30;
             this.label18.Text = "ifBars";
             // 
+            // button8
+            // 
+            this.button8.Font = new System.Drawing.Font("\' RonySiswadi Architect 4", 19.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button8.Location = new System.Drawing.Point(485, 11);
+            this.button8.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(216, 88);
+            this.button8.TabIndex = 17;
+            this.button8.Text = "Load Playlist From File";
+            this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(1057, 580);
+            this.Controls.Add(this.button8);
             this.Controls.Add(this.label18);
             this.Controls.Add(this.label17);
             this.Controls.Add(this.label16);
@@ -627,6 +641,7 @@ namespace ProTVConverter
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Button button8;
     }
 }
 

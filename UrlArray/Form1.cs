@@ -43,13 +43,15 @@ namespace ProTVConverter
         public bool isExporting = false;
 
         // INPUT YOUR API KEY HERE
-        string keyAPI = "YOUR_API_KEY_HERE";
+        string keyAPI = "AIzaSyDgUFEGju9RG9wA1bVkCyQBueoffMQa2Ko";
+
+        private YouTubeService youTubeAPI = null;
 
         // Initialize Form
         public Form1()
         {
             InitializeComponent();
-
+            youTubeAPI = RegisterYT();
         }
 
         YouTubeService RegisterYT()
@@ -71,8 +73,10 @@ namespace ProTVConverter
             {
                 // Console.WriteLine("Link = " + textBox1.Text);
 
+                bool valid = IsValidYoutubeUrl(textBox1.Text);
+
                 // Validate input URL
-                if (!IsValidYoutubeUrl(textBox1.Text))
+                if (!valid)
                 {
                     // Console.WriteLine("Is NOT valid yt link");
                     if (!IsValidUrl(textBox1.Text))
@@ -85,9 +89,10 @@ namespace ProTVConverter
 
                 // Deleted/Private Video Check
                 string newLink = textBox1.Text;
-                if (IsValidYoutubeUrl(textBox1.Text))
+                if (valid)
                 {
-                    if (GetVideoName(RegisterYT(), textBox1.Text) == "Deleted")
+                    string name = GetVideoName(youTubeAPI, textBox1.Text);
+                    if (name == "Deleted")
                     {
                         MessageBox.Show("The link you entered has been removed from Youtube or is invalid.");
                         textBox1.Text = "URL";
@@ -95,7 +100,7 @@ namespace ProTVConverter
                         return;
                     }
 
-                    if (GetVideoName(RegisterYT(), textBox1.Text) == "Private video")
+                    if (name == "Private video")
                     {
                         MessageBox.Show("The link you entered has been privated on Youtube or is invalid.");
                         textBox1.Text = "URL";
@@ -119,10 +124,10 @@ namespace ProTVConverter
                 }
                 else
                 {
-                    if (IsValidYoutubeUrl(textBox1.Text))
+                    if (valid)
                     {
                         // Console.WriteLine("Is valid yt link");
-                        videoName = GetVideoName(RegisterYT(), newLink);
+                        videoName = GetVideoName(youTubeAPI, newLink);
                     }
                     else
                     {
@@ -295,7 +300,7 @@ namespace ProTVConverter
         public bool checkApi()
         {
             var apiKey = keyAPI;
-            string videoName = GetVideoName(RegisterYT(), "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+            string videoName = GetVideoName(youTubeAPI, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
             if (videoName == "Rick Astley - Never Gonna Give You Up (Official Music Video)")
             {
                 return true;
@@ -391,7 +396,7 @@ namespace ProTVConverter
                         {
                             if (IsValidYoutubeUrl(urlList[i]))
                             {
-                                string videoName = GetVideoName(RegisterYT(), urlList[i]);
+                                string videoName = GetVideoName(youTubeAPI, urlList[i]);
 
                                 if (videoName == "Deleted video" || videoName == "Private video" || videoName == "" || videoName == "API Error")
                                 {
@@ -420,7 +425,7 @@ namespace ProTVConverter
                             {
                                 if (IsValidYoutubeUrl(urlList[i]))
                                 {
-                                    string videoName = GetVideoName(RegisterYT(), urlList[i]);
+                                    string videoName = GetVideoName(youTubeAPI, urlList[i]);
 
                                     if (videoName == "Deleted video" || videoName == "Private video" || videoName == "" || videoName == "API Error")
                                     {
@@ -469,9 +474,10 @@ namespace ProTVConverter
                                 {
                                     if (IsValidYoutubeUrl(urlList[i]))
                                     {
-                                        if (GetVideoName(RegisterYT(), urlList[i]) != "Deleted video" || GetVideoName(RegisterYT(), urlList[i]) != "Private video" || GetVideoName(RegisterYT(), urlList[i]) != "API Error")
+                                        string name = GetVideoName(youTubeAPI, urlList[i]);
+                                        if (name != "Deleted video" || name != "Private video" || name != "API Error")
                                         {
-                                            GetVideoThumbnail(RegisterYT(), urlList[i], folderPath);
+                                            GetVideoThumbnail(youTubeAPI, urlList[i], folderPath);
                                         }
                                     }
                                 }
@@ -504,7 +510,8 @@ namespace ProTVConverter
 
                                 sb.AppendLine("");
                                 Interlocked.Increment(ref count);
-                                Invoke(new Action(() => label8.Text = count.ToString()));
+                                int num = Int32.Parse(count.ToString()) - Int32.Parse(label20.Text);
+                                Invoke(new Action(() => label8.Text = num.ToString()));
                             }
 
                             using (StreamWriter sw = new StreamWriter(filePath))
@@ -537,17 +544,18 @@ namespace ProTVConverter
                             label1.Text = "Downloading thumbnails";
                             int numThumbnails = 0;
                             var thumbnailNames = new List<string>();
-                            var semaphore = new SemaphoreSlim(4); // limit to 4 concurrent downloads
+                            var semaphore = new SemaphoreSlim(5); // limit to 4 concurrent downloads
                             foreach (var url in urlList)
                             {
                                 if (IsValidYoutubeUrl(url))
                                 {
-                                    if (GetVideoName(RegisterYT(), url) != "Deleted video" || GetVideoName(RegisterYT(), url) != "Private video" || GetVideoName(RegisterYT(), url) != "API Error")
+                                    string name = GetVideoName(youTubeAPI, url);
+                                    if (name != "Deleted video" || name != "Private video" || name != "API Error")
                                     {
                                         await semaphore.WaitAsync(); // wait until there's an available slot
                                         try
                                         {
-                                            var thumbnailName = GetVideoThumbnail(RegisterYT(), url, folderPath);
+                                            var thumbnailName = GetVideoThumbnail(youTubeAPI, url, folderPath);
                                             if (thumbnailName != null)
                                             {
                                                 lock (thumbnailNames) thumbnailNames.Add(thumbnailName);
@@ -564,7 +572,8 @@ namespace ProTVConverter
 
                                                     string entry = sb.ToString();
                                                     Interlocked.Increment(ref count);
-                                                    Invoke(new Action(() => label8.Text = count.ToString()));
+                                                    int num = Int32.Parse(count.ToString()) - Int32.Parse(label20.Text);
+                                                    Invoke(new Action(() => label8.Text = num.ToString()));
 
                                                     await sw.WriteAsync(entry);
                                                 }
@@ -599,7 +608,8 @@ namespace ProTVConverter
                                         sb.AppendLine("");
                                         string entry = sb.ToString();
                                         Interlocked.Increment(ref count);
-                                        Invoke(new Action(() => label8.Text = count.ToString()));
+                                        int num = Int32.Parse(count.ToString()) - Int32.Parse(label20.Text);
+                                        Invoke(new Action(() => label8.Text = num.ToString()));
 
                                         // Acquire the semaphore to write to the file
                                         await semaphore.WaitAsync();
@@ -726,7 +736,7 @@ namespace ProTVConverter
                 try
                 {
                     // Set up the request to retrieve the videos in the playlist
-                    var playlistItemsListRequest = RegisterYT().PlaylistItems.List("snippet");
+                    var playlistItemsListRequest = youTubeAPI.PlaylistItems.List("snippet");
                     playlistItemsListRequest.PlaylistId = playlistId;
                     playlistItemsListRequest.MaxResults = 500;
 
@@ -847,7 +857,7 @@ namespace ProTVConverter
                     urlList.Insert(index, "@" + prefix + videoUrl);
                     nameList.Insert(index, videoTitle);
                     index++;
-                    label3.Text = index.ToString();
+                    label3.Text = urlList.Count.ToString();
                     this.Update();
                 }
             }
@@ -973,6 +983,52 @@ namespace ProTVConverter
             if (isExporting == true)
             {
                 MessageBox.Show("Program is currently exporting, please wait until it is finished!");
+            }
+        }
+
+        private async void button8_Click(object sender, EventArgs e)
+        {
+            // Create an instance of the OpenFileDialog class
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            // Set the properties of the file dialog
+            openFileDialog.Title = "Select a previously exported playlist txt file";
+            openFileDialog.Filter = "Text Files|*.txt"; // Filter for text files only
+
+            // Show the file dialog and check if the user clicked the OK button
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                // Get the selected file path
+                string selectedFilePath = openFileDialog.FileName;
+
+                // Use async/await to perform file reading and processing asynchronously
+                await Task.Run(() =>
+                {
+                    using (StreamReader reader = new StreamReader(selectedFilePath))
+                    {
+                        string line;
+
+                        // Read and process each line until the end of the file
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            if (line.Contains("@https://www.youtube.com/watch?v="))
+                            {
+                                urlList.Add(line);
+                            }
+                            else if (line.Contains(".jpg") || line.Contains(".png"))
+                            {
+                                thumbnailList.Add(line);
+                            }
+                            else if (line.Length > 0)
+                            {
+                                nameList.Add(line);
+                            }
+                        }
+                    }
+                });
+
+                // Update the UI with the result after processing is complete
+                label3.Text = urlList.Count.ToString();
             }
         }
     }
