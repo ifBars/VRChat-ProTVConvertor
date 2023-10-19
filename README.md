@@ -1,6 +1,6 @@
 # ProTVConvertor
 
-ProTVConvertor is a program that allows users to convert YouTube video links, YouTube playlist links, and http and https video links into the correct format required for ProTV, a VRChat development addon that allows users to create playlists to watch in VRChat. The program uses threading to complete these tasks as fast as possible, especially on modern CPUs. With this program, you can convert all the links into a playlist, with names, in the correct format. The program also comes with a feature for downloading thumbnails, checking for updates automatically, and it can automatically remove any YouTube videos that have been deleted or privated, or any invalid YouTube video.
+ProTVConvertor is a program that allows users to convert YouTube video links, YouTube playlist links, and HTTP and HTTPS video links into the correct format required for ProTV, a VRChat development add-on that allows users to create playlists to watch in VRChat. The program uses threading to complete these tasks as fast as possible, especially on modern CPUs. With this program, you can convert all the links into a playlist, with names, in the correct format. The program also comes with a feature for downloading thumbnails, checking for updates automatically, and it can automatically remove any YouTube videos that have been deleted or private, or any invalid YouTube video.
 
 ## FAQS
  Q: Why did it only export x amount of videos out of the whole playlist?
@@ -8,10 +8,10 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
  removes the duplicate.
 
  Q: What are the risks of using Fast Export?
- A: You can run the risk of only receiving part of the whole playlist's thumbnails. As well as you run the risk of the program crashing, however it is very rare.
+ A: You can run the risk of only receiving part of the entire playlist's thumbnails. As well as you run the risk of the program crashing, however it is very rare.
 
  Q: What does it mean if the "API Key Status" says "Invalid"?
- A: This means the YouTube API key that the program is using, is invalid. If you are using your own API key, refer to the YouTube API portal. If you are using the latest release 
+ A: This means the YouTube API key, that the program is using, is invalid. If you are using your own API key, refer to the YouTube API portal. If you are using the latest release 
  build, please create an issue on the repository.
 
 ## Requirements
@@ -34,19 +34,19 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
 6. To set custom names for a playlist, tick "Use Custom Names" and load the playlist from the ID. It will then ask for a custom name for each song. If you do not want a custom name for that one, you can simply press enter.
 7. To delete all URLs, press "Empty Links." This will not delete the file, but it will clear all current indexes and write over them every time you export to the same file.
 8. If you are using URL Prefixes, make sure it is an HTTPS link like "https://nextnex.com/?url=", and make sure to put in your prefix before loading a playlist or link.
-9. For any questions, comments, concerns, etc, contact P.Penguin#7468
+9. For any questions, comments, concerns, etc., contact P.Penguin#7468
 
-Quick Note: If you are using URL Prefixes, make sure it is an HTTPS link like https://nextnex.com/?url=. Also, make sure to put in your prefix before loading a playlist or link.
+Quick Note: If you are using URL Prefixes, make sure it is an HTTPS link, like https://nextnex.com/?url=. Also, make sure to put in your prefix before loading a playlist or link.
 
 ![Capture](https://user-images.githubusercontent.com/114284668/231539397-33625ca8-50d0-43b6-90b6-d9dacbd23e32.PNG)
 
 ## SOURCE CODE USAGE:
 
-	1. Compile code and open the application: First make sure you have Visual Studio installed. Next, navigate to the folder containing ProTVConverter.sln, and double click the file. Once the file has opened, press Project, and Build Solution. Once you have compiled the code, double-click on the exe file, in the UrlArray\bin\Debug folder, to open the application.
+	1. Compile code and open the application: First make sure you have Visual Studio installed. Next, navigate to the folder containing ProTVConverter.sln, and double-click the file. Once the file has opened, press Project, and Build Solution. Once you have compiled the code, double-click on the EXE file, in the UrlArray\bin\Debug folder, to open the application.
 	
-	2. Add URLs to the list: Type or copy and paste the URL of a YouTube video or playlist into the “URL” field. If you wish, add a name for the video or playlist into the “Name (Optional)” field. Once you have entered all desired information, click the “Add Link” button. If there is an error with your URL, the application will display a message telling you to input a valid URL.
+	2. Add URLs to the list: Type or copy and paste the URL of a YouTube video or playlist into the “URL” field. If you wish, add a name for the video or playlist into the “Name (Optional)” field. Once you have entered all the desired information, click the “Add Link” button. If there is an error with your URL, the application will display a message telling you to input a valid URL.
 
-	3. Change the prefix (optional): If you wish to add a prefix to all of the URLs, type it into the “Prefix” field. If you are entering a full URL in the “Prefix” field, make sure it starts with “https” or else the application may not work.
+	3. Change the prefix (optional): If you wish to add a prefix to all the URLs, type it into the “Prefix” field. If you are entering a full URL in the “Prefix” field, make sure it starts with “HTTP” or else the application may not work.
 
 	4. Track the number of URLs added: The “Indexes” field will tell you how many links have been added.
 
