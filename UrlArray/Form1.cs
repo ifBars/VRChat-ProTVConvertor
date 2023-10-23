@@ -20,32 +20,72 @@ namespace ProTVConverter
 {
     public partial class Form1 : Form
     {
+        // -----------------------
+        // Class Initialization
+        // -----------------------
 
-        // Initialize Version Class
+        // Initialize the Version class
         Version v = new Version("ifBars", "ProTVConvertor");
-        // Url, Name, and Thumbnail Lists
+
+        // Initialize YouTube API service (moved to the bottom for clarity)
+        private YouTubeService youTubeAPI = null;
+
+        // -----------------------
+        // Lists for URLs, Names, and Thumbnails
+        // -----------------------
+
+        // List for storing URLs
         List<string> urlList = new List<string>();
+
+        // List for storing names
         List<string> nameList = new List<string>();
+
+        // List for storing thumbnails
         List<string> thumbnailList = new List<string>();
-        // Indexs/URLs in lists
+
+        // -----------------------
+        // Variables related to URLs
+        // -----------------------
+
+        // Index for lists
         int index = 0;
-        // Prefix to add before URLS
+
+        // Prefix added before URLs
         string prefix = "";
-        // Register file path
+
+        // -----------------------
+        // File-related Variables
+        // -----------------------
+
+        // Path of the file
         string filePath;
-        // Register name of file input
+
+        // Name of file input
         string userInput = "urls";
-        // Register real video name variable
+
+        // Actual video title
         public static string realVideoTitle;
-        // Register fast export variable
-        public bool FastE = false;
-        // Register isExporting variable
+
+        // -----------------------
+        // Export-related Variables
+        // -----------------------
+
+        // Indicates whether the export is a fast one
+        public bool fastExport = false;
+
+        // Indicates whether the system is currently exporting
         public bool isExporting = false;
 
-        // INPUT YOUR API KEY HERE
-        string keyAPI = "AIzaSyDgUFEGju9RG9wA1bVkCyQBueoffMQa2Ko";
+        // Indicates wether the current set of URLS has already been scanned for invalid links
+        public bool hasRemoved = false;
 
-        private YouTubeService youTubeAPI = null;
+        // -----------------------
+        // API Configuration
+        // -----------------------
+
+        // Load the API key from a secure place (for the sake of time, it remains here)
+        // TODO: Consider loading this from a configuration file or environment variable
+        string keyAPI = "AIzaSyDgUFEGju9RG9wA1bVkCyQBueoffMQa2Ko";
 
         // Initialize Form
         public Form1()
@@ -149,6 +189,8 @@ namespace ProTVConverter
                 label1.Text = "Link added";
                 index++;
                 label3.Text = index.ToString();
+
+                hasRemoved = false;
             }
             else
             {
@@ -385,18 +427,19 @@ namespace ProTVConverter
                     return;
                 }
 
-                if (checkBox3.Checked == true)
+                if (checkBox3.Checked == true && !hasRemoved)
                 {
+                    hasRemoved = true;
                     int scannedIndex = urlList.Count;
                     Invoke(new Action(() => label1.Text = "Removing invalid links " + scannedIndex));
 
-                    if (FastE == false)
+                    if (fastExport == false)
                     {
                         for (int i = 0; i < urlList.Count; i++)
                         {
                             if (IsValidYoutubeUrl(urlList[i]))
                             {
-                                string videoName = GetVideoName(youTubeAPI, urlList[i]);
+                                string videoName = nameList[i];
 
                                 if (videoName == "Deleted video" || videoName == "Private video" || videoName == "" || videoName == "API Error")
                                 {
@@ -425,7 +468,7 @@ namespace ProTVConverter
                             {
                                 if (IsValidYoutubeUrl(urlList[i]))
                                 {
-                                    string videoName = GetVideoName(youTubeAPI, urlList[i]);
+                                    string videoName = nameList[i];
 
                                     if (videoName == "Deleted video" || videoName == "Private video" || videoName == "" || videoName == "API Error")
                                     {
@@ -460,7 +503,7 @@ namespace ProTVConverter
                     Invoke(new Action(() => label1.Text = "Scan complete " + urlList.Count + " links exported."));
                 }
 
-                if (FastE == false)
+                if (fastExport == false)
                 {
                     try
                     {
@@ -858,6 +901,7 @@ namespace ProTVConverter
                     nameList.Insert(index, videoTitle);
                     index++;
                     label3.Text = urlList.Count.ToString();
+                    hasRemoved = false;
                     this.Update();
                 }
             }
@@ -938,12 +982,12 @@ namespace ProTVConverter
         {
             if (isExporting == false)
             {
-                if (FastE == false)
+                if (fastExport == false)
                 {
                     DialogResult result = MessageBox.Show("WARNING: This can cause the program to freeze during export when exporting large amounts of links, do you want to continue?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (result == DialogResult.Yes)
                     {
-                        FastE = true;
+                        fastExport = true;
                         button7.Text = "Disable Fast Export";
                     }
                     else
@@ -953,7 +997,7 @@ namespace ProTVConverter
                 }
                 else
                 {
-                    FastE = false;
+                    fastExport = false;
                     button7.Text = "Enable Fast Export";
                 }
             }
@@ -1006,29 +1050,49 @@ namespace ProTVConverter
                 {
                     using (StreamReader reader = new StreamReader(selectedFilePath))
                     {
-                        string line;
+                        string url = null;
+                        string thumbnail = null;
+                        string name = null;
 
                         // Read and process each line until the end of the file
-                        while ((line = reader.ReadLine()) != null)
+                        while (!reader.EndOfStream)
                         {
+                            string line = reader.ReadLine();
+
                             if (line.Contains("@https://www.youtube.com/watch?v="))
                             {
-                                urlList.Add(line);
+                                url = line;
                             }
                             else if (line.Contains(".jpg") || line.Contains(".png"))
                             {
-                                thumbnailList.Add(line);
+                                thumbnail = line;
                             }
                             else if (line.Length > 0)
                             {
-                                nameList.Add(line);
+                                name = line;
+
+                                // Insert the related entries at the same index
+                                if (url != null && thumbnail != null)
+                                {
+                                    // Ensure all three lists have the same length
+                                    int index = urlList.Count;
+                                    urlList.Insert(index, url);
+                                    thumbnailList.Insert(index, thumbnail);
+                                    nameList.Insert(index, name);
+
+                                    // Reset temporary variables
+                                    url = null;
+                                    thumbnail = null;
+                                    name = null;
+                                    hasRemoved = false;
+                                }
                             }
                         }
                     }
                 });
 
-                // Update the UI with the result after processing is complete
-                label3.Text = urlList.Count.ToString();
+            // Update the UI with the result after processing is complete
+            label3.Text = urlList.Count.ToString();
             }
         }
     }
