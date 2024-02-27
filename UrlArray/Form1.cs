@@ -85,7 +85,7 @@ namespace ProTVConverter
 
         // Load the API key from a secure place (for the sake of time, it remains here)
         // TODO: Consider loading this from a configuration file or environment variable
-        string keyAPI = "AIzaSyDgUFEGju9RG9wA1bVkCyQBueoffMQa2Ko";
+        string keyAPI = "AIzaSyBepCF4S_WWaWNXvAcgbeZ4isxRDUwtMjQ";
 
         // Initialize Form
         public Form1()

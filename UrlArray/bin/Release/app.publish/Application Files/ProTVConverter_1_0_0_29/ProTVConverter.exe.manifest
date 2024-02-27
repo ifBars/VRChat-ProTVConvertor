@@ -127,14 +127,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ProTVConverter.exe" size="64992">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="ProTVConverter.exe" size="58880">
       <assemblyIdentity name="ProTVConverter" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>tN1PA0QbhglsdPs3+JDyRsxQ99R/7McZFsg5hAv53jw=</dsig:DigestValue>
+        <dsig:DigestValue>ywXBH6RKyirl7lZ2x3gWaKmdnqd8/3+sRSZIuAYvGOQ=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
