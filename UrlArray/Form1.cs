@@ -85,7 +85,7 @@ namespace ProTVConverter
 
         // Load the API key from a secure place (for the sake of time, it remains here)
         // TODO: Consider loading this from a configuration file or environment variable
-        string keyAPI = "AIzaSyBepCF4S_WWaWNXvAcgbeZ4isxRDUwtMjQ";
+        string keyAPI = "AIzaSyAcgvFEG2hJSRLhqpa8ocMTmxq4Og7Fcnw";
 
         // Initialize Form
         public Form1()
@@ -109,6 +109,7 @@ namespace ProTVConverter
 
         private void button1_Click(object sender, EventArgs e)
         {
+            prefix = "";
             if (isExporting == false)
             {
                 // Console.WriteLine("Link = " + textBox1.Text);
@@ -248,7 +249,12 @@ namespace ProTVConverter
             }
             catch (Google.GoogleApiException ex)
             {
-                if (ex.HttpStatusCode == HttpStatusCode.BadRequest && ex.Message.Contains("API key expired"))
+                if (ex.HttpStatusCode == HttpStatusCode.BadRequest)
+                {
+                    MessageBox.Show("Bad video link/request!");
+                    return "API Error";
+                }
+                else if (ex.Message.Contains("API key expired"))
                 {
                     MessageBox.Show("API key is expired!");
                     return "API Error";
@@ -314,7 +320,12 @@ namespace ProTVConverter
             }
             catch (Google.GoogleApiException ex)
             {
-                if (ex.HttpStatusCode == HttpStatusCode.BadRequest && ex.Message.Contains("API key expired"))
+                if (ex.HttpStatusCode == HttpStatusCode.BadRequest)
+                {
+                    MessageBox.Show("Bad video link/request!");
+                    return "API Error";
+                }
+                else if (ex.Message.Contains("API key expired"))
                 {
                     MessageBox.Show("API key is expired!");
                     return "API Error";
@@ -378,11 +389,6 @@ namespace ProTVConverter
                 isExporting = true;
                 checkBox2.Enabled = false;
                 checkBox3.Enabled = false;
-                // Check if user prefix exists
-                if (textBox2.Text.Contains("https"))
-                {
-                    prefix = textBox2.Text;
-                }
 
                 if (textBox5.Text.Contains("File Name (No Need for .txt)") == false)
                 {
@@ -763,6 +769,7 @@ namespace ProTVConverter
 
         private async void button3_Click(object sender, EventArgs e)
         {
+            prefix = "";
             if (isExporting == false)
             {
                 label1.Text = "Attempting to grab playlist";
@@ -841,7 +848,12 @@ namespace ProTVConverter
                         MessageBox.Show("Invalid playlist ID. Is the playlist private? All playlists must be public to grab.");
                         return;
                     }
-                    else if (ev.HttpStatusCode == HttpStatusCode.BadRequest || ev.Message.Contains("API key expired"))
+                    else if (ev.HttpStatusCode == HttpStatusCode.BadRequest)
+                    {
+                        MessageBox.Show("Invalid playlist ID/Request. Is the playlist link correct? All playlists must be public to grab.");
+                        return;
+                    }
+                    else if (ev.Message.Contains("API key expired"))
                     {
                         MessageBox.Show("API key is expired!");
                         return;
@@ -860,7 +872,7 @@ namespace ProTVConverter
                         StringBuilder sb = new StringBuilder();
                         string logMessage = string.Format("Error message: {0}\nStack trace: {1}\n\n", ev.Message, ev.StackTrace);
                         sb.AppendLine(logMessage);
-                        sb.AppendLine("API KEY VALID " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
+                        sb.AppendLine("API KEY " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
                         File.AppendAllText(logFilePath, sb.ToString());
                         return;
                     }
@@ -894,6 +906,8 @@ namespace ProTVConverter
                         videoTitle = realVideoTitle;
                     }
 
+                    // Get prefix
+                    prefix = textBox6.Text.Contains("https") ? textBox6.Text : "";
 
                     var videoId = playlistItem.Snippet.ResourceId.VideoId;
                     var videoUrl = "https://www.youtube.com/watch?v=" + videoId;
@@ -1059,34 +1073,41 @@ namespace ProTVConverter
                         {
                             string line = reader.ReadLine();
 
-                            if (line.Contains("@https://www.youtube.com/watch?v="))
+                            // If the line is empty, it's time to add collected data to lists
+                            if (string.IsNullOrWhiteSpace(line))
                             {
-                                url = line;
-                            }
-                            else if (line.Contains(".jpg") || line.Contains(".png"))
-                            {
-                                thumbnail = line;
-                            }
-                            else if (line.Length > 0)
-                            {
-                                name = line;
-
-                                // Insert the related entries at the same index
-                                if (url != null && thumbnail != null)
+                                if (url != null && name != null)
                                 {
-                                    // Ensure all three lists have the same length
-                                    int index = urlList.Count;
-                                    urlList.Insert(index, url);
-                                    thumbnailList.Insert(index, thumbnail);
-                                    nameList.Insert(index, name);
+                                    urlList.Add(url);
+                                    nameList.Add(name);
+                                    thumbnailList.Add(thumbnail); // Add thumbnail regardless, even if it's null
 
                                     // Reset temporary variables
                                     url = null;
                                     thumbnail = null;
                                     name = null;
-                                    hasRemoved = false;
                                 }
                             }
+                            else if (line.Contains("https")) // Assuming this denotes the URL
+                            {
+                                url = line;
+                            }
+                            else if (line.Contains(".jpg") || line.Contains(".png")) // Assuming this denotes the thumbnail
+                            {
+                                thumbnail = line;
+                            }
+                            else // Assuming it's the name
+                            {
+                                name = line;
+                            }
+                        }
+
+                        // Add the last entry if it exists
+                        if (url != null && name != null)
+                        {
+                            urlList.Add(url);
+                            nameList.Add(name);
+                            thumbnailList.Add(thumbnail); // Add thumbnail regardless, even if it's null
                         }
                     }
                 });
