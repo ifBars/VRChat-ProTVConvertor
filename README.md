@@ -8,10 +8,10 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
  removes the duplicate.
 
  Q: What are the risks of using Fast Export?
- A: You can run the risk of only receiving part of the entire playlist's thumbnails. As well as you run the risk of the program crashing, however it is very rare.
+ A: You can run the risk of only receiving part of the entire playlist's thumbnails. As well as you run the risk of the program crashing, however it is very rare. See [Issue #5](https://github.com/ifBars/VRChat-ProTVConvertor/releases/tag/v2.4.0) for comparison.
 
- Q: What does it mean if the "API Key Status" says "Invalid"?
- A: This means the YouTube API key, that the program is using, is invalid. If you are using your own API key, refer to the YouTube API portal. If you are using the latest release 
+ Q: What does it mean if the "API Key Status" says "Invalid" or "0"?
+ A: This means the YouTube API key, that the program is using, is invalid, or the app cannot connect to the YT API. If you are using your own API key, refer to the YouTube API portal. If you are using the latest release 
  build, please create an issue on the repository.
 
 ## Requirements
@@ -20,9 +20,8 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
 
 ## Installation
 
-1. Download the installer.exe file from the ProTVConvertor repository.
-2. Run the installer.exe file to install the program.
-3. Run the ProTVConvertor desktop icon.
+1. Download the latest release.zip file from the ProTVConverter repository.
+2. Run the ProTVConveter.exe file to open the program.
 
 ## Usage
 
