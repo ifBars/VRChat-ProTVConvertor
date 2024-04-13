@@ -87,6 +87,9 @@ namespace ProTVConverter
         // TODO: Consider loading this from a configuration file or environment variable
         string keyAPI = "AIzaSyAcgvFEG2hJSRLhqpa8ocMTmxq4Og7Fcnw";
 
+        string logFilePath = string.Empty;
+        bool doLog = false;
+
         // Initialize Form
         public Form1()
         {
@@ -339,12 +342,15 @@ namespace ProTVConverter
                 {
                     MessageBox.Show("An error occurred: " + ex.Message + "\n\nPlease check your internet connection or API key.");
 
-                    // Log the exception to a file
-                    string logFilePath = CreateLogFile();
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendLine(string.Format("Error message: {0}\nStack trace: {1}\n\n", ex.Message, ex.StackTrace));
-                    sb.AppendLine("API KEY VALID " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
-                    File.AppendAllText(logFilePath, sb.ToString());
+                    if (doLog)
+                    {
+                        // Log the exception to a file
+                        StringBuilder sb = new StringBuilder();
+                        sb.AppendLine(string.Format("Error message: {0}\nStack trace: {1}\n\n", ex.Message, ex.StackTrace));
+                        sb.AppendLine("API KEY VALID " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
+                        File.AppendAllText(logFilePath, sb.ToString());
+                    }
+
                     return "API Error";
                 }
             }
@@ -422,11 +428,15 @@ namespace ProTVConverter
                 if (urlList.Count != nameList.Count)
                 {
                     MessageBox.Show("Error: lists are not the same length");
-                    string logFilePath = CreateLogFile();
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendLine("Error message: Error: lists are not the same length");
-                    sb.AppendLine("URL " + urlList.Count + " NAME " + nameList.Count + " THUMBNAIL " + thumbnailList.Count);
-                    File.AppendAllText(logFilePath, sb.ToString());
+
+                    if (doLog)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.AppendLine("Error message: Error: lists are not the same length");
+                        sb.AppendLine("URL " + urlList.Count + " NAME " + nameList.Count + " THUMBNAIL " + thumbnailList.Count);
+                        File.AppendAllText(logFilePath, sb.ToString());
+                    }
+
                     isExporting = false;
                     checkBox2.Enabled = true;
                     checkBox3.Enabled = true;
@@ -494,12 +504,12 @@ namespace ProTVConverter
                         await Task.Run(() =>
                             {
                                 // Remove the items that need to be removed
-                                Parallel.ForEach(itemsToRemove.OrderByDescending(x => x), i =>
+                                foreach (var i in itemsToRemove.OrderByDescending(x => x))
                                 {
                                     urlList.RemoveAt(i);
                                     nameList.RemoveAt(i);
-                                    Interlocked.Decrement(ref index);
-                                });
+                                    index--;
+                                }
                             });
 
                         label3.Text = index.ToString();
@@ -728,6 +738,12 @@ namespace ProTVConverter
         {
             string playlistID = "";
 
+            if (entry.Contains("&si="))
+            {
+                int index = entry.IndexOf("&si=");
+                entry.Substring(0, index);
+            }
+
             // Check if the entry is a playlist ID
             if (entry.Length == 34)
             {
@@ -788,7 +804,7 @@ namespace ProTVConverter
                     // Set up the request to retrieve the videos in the playlist
                     var playlistItemsListRequest = youTubeAPI.PlaylistItems.List("snippet");
                     playlistItemsListRequest.PlaylistId = playlistId;
-                    playlistItemsListRequest.MaxResults = 500;
+                    playlistItemsListRequest.MaxResults = 1000;
 
                     // Execute the request in parallel
                     await Task.Run(async () =>
@@ -867,33 +883,55 @@ namespace ProTVConverter
                     {
                         MessageBox.Show("An error occurred: " + ev.Message + "\n\nPlease check your internet connection or API key.");
 
-                        // Log the exception to a file
-                        string logFilePath = CreateLogFile();
-                        StringBuilder sb = new StringBuilder();
-                        string logMessage = string.Format("Error message: {0}\nStack trace: {1}\n\n", ev.Message, ev.StackTrace);
-                        sb.AppendLine(logMessage);
-                        sb.AppendLine("API KEY " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
-                        File.AppendAllText(logFilePath, sb.ToString());
+                        if (doLog)
+                        {
+                            // Log the exception to a file
+                            StringBuilder sb = new StringBuilder();
+                            string logMessage = string.Format("Error message: {0}\nStack trace: {1}\n\n", ev.Message, ev.StackTrace);
+                            sb.AppendLine(logMessage);
+                            sb.AppendLine("API KEY " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
+                            File.AppendAllText(logFilePath, sb.ToString());
+                        }
+
                         return;
                     }
                 }
 
                 // Print the title and URL of each video in the playlist
-                foreach (var playlistItem in playlistItemsBuffer.GetConsumingEnumerable())
+                foreach (PlaylistItem playlistItem in playlistItemsBuffer.GetConsumingEnumerable())
                 {
 
                     string videoTitle = "";
                     realVideoTitle = playlistItem.Snippet.Title;
 
-                    // Deleted/Private Video Check
-                    if (realVideoTitle == "Deleted")
+                    if (checkBox3.Checked == true)
                     {
-                        return;
-                    }
+                        // Deleted/Private Video Check
+                        if (realVideoTitle == "Deleted")
+                        {
+                            if (doLog)
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                string logMessage = string.Format("Video deleted so was not added, id: " + playlistItem.Snippet.ResourceId.VideoId);
+                                sb.AppendLine(logMessage);
+                                sb.AppendLine("API KEY " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
+                                File.AppendAllText(logFilePath, sb.ToString());
+                            }
+                            continue;
+                        }
 
-                    if (realVideoTitle == "Private video")
-                    {
-                        return;
+                        if (realVideoTitle == "Private video")
+                        {
+                            if (doLog)
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                string logMessage = string.Format("Video privated so was not added, id: " + playlistItem.Snippet.ResourceId.VideoId);
+                                sb.AppendLine(logMessage);
+                                sb.AppendLine("API KEY " + checkApi().ToString() + " INTERNET " + IsInternetAvailable().ToString());
+                                File.AppendAllText(logFilePath, sb.ToString());
+                            }
+                            continue;
+                        }
                     }
 
                     if (checkBox1.Checked == true)
@@ -1112,9 +1150,19 @@ namespace ProTVConverter
                     }
                 });
 
-            // Update the UI with the result after processing is complete
-            label3.Text = urlList.Count.ToString();
+                // Update the UI with the result after processing is complete
+                label3.Text = urlList.Count.ToString();
             }
+        }
+
+        private void checkBox4_CheckedChanged(object sender, EventArgs e)
+        {
+            if (logFilePath == string.Empty)
+            {
+                logFilePath = CreateLogFile();
+            }
+
+            doLog = checkBox4.Checked;
         }
     }
 }
