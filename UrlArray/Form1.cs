@@ -802,7 +802,7 @@ namespace ProTVConverter
                 try
                 {
                     // Set up the request to retrieve the videos in the playlist
-                    var playlistItemsListRequest = youTubeAPI.PlaylistItems.List("snippet");
+                    var playlistItemsListRequest = youTubeAPI.PlaylistItems.List("status,snippet");
                     playlistItemsListRequest.PlaylistId = playlistId;
                     playlistItemsListRequest.MaxResults = 1000;
 
@@ -908,7 +908,7 @@ namespace ProTVConverter
                     if (checkBox3.Checked == true)
                     {
                         // Deleted/Private Video Check
-                        if (realVideoTitle == "Deleted")
+                        if (realVideoTitle == "Deleted" || realVideoTitle == "Deleted video")
                         {
                             if (doLog)
                             {
