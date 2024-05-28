@@ -19,9 +19,15 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
  2. Microsoft .NET Core SDK 6.0
 
 ## Installation
+1. Download the latest release.zip file from the ProTVConvertor repository.
+2. Run the ProTVConvetor.exe file to open the program.
 
-1. Download the latest release.zip file from the ProTVConverter repository.
-2. Run the ProTVConveter.exe file to open the program.
+## Updating
+To update ProTVConvertor, follow these steps.
+1. Uninstall your current installion of ProTVConvertor.
+2. Download the latest/desired version of ProTVConvertor.
+3. Unzip the files to a folder.
+4. Run the ProTVConvetor.exe file to open the program.
 
 ## Usage
 
@@ -41,7 +47,7 @@ Quick Note: If you are using URL Prefixes, make sure it is an HTTPS link, like h
 
 ## SOURCE CODE USAGE:
 
-	1. Compile code and open the application: First make sure you have Visual Studio installed. Next, navigate to the folder containing ProTVConverter.sln, and double-click the file. Once the file has opened, press Project, and Build Solution. Once you have compiled the code, double-click on the EXE file, in the UrlArray\bin\Debug folder, to open the application.
+	1. Compile code and open the application: First make sure you have Visual Studio installed. Next, navigate to the folder containing ProTVConvertor.sln, and double-click the file. Once the file has opened, press Project, and Build Solution. Once you have compiled the code, double-click on the EXE file, in the UrlArray\bin\Debug folder, to open the application.
 	
 	2. Add URLs to the list: Type or copy and paste the URL of a YouTube video or playlist into the “URL” field. If you wish, add a name for the video or playlist into the “Name (Optional)” field. Once you have entered all the desired information, click the “Add Link” button. If there is an error with your URL, the application will display a message telling you to input a valid URL.
 
