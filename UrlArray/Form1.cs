@@ -897,12 +897,13 @@ namespace ProTVConverter
                     }
                 }
 
-                // Print the title and URL of each video in the playlist
+                // Insert the title and URL of each video into the total video list
                 foreach (PlaylistItem playlistItem in playlistItemsBuffer.GetConsumingEnumerable())
                 {
 
                     string videoTitle = "";
                     realVideoTitle = playlistItem.Snippet.Title;
+                    string privacyStatus = playlistItem.Status.PrivacyStatus;
 
                     if (checkBox3.Checked == true)
                     {
@@ -920,7 +921,7 @@ namespace ProTVConverter
                             continue;
                         }
 
-                        if (realVideoTitle == "Private video")
+                        if (realVideoTitle == "Private video" || privacyStatus == "Private")
                         {
                             if (doLog)
                             {
