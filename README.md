@@ -16,7 +16,7 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
 
 ## Requirements
  1. Windows 7/8/10/11
- 2. Microsoft .NET Core SDK 6.0
+ 2. [Microsoft .NET Desktop Runtime 6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 
 ## Installation
 1. Download the latest release.zip file from the ProTVConvertor repository.
