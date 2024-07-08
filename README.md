@@ -1,5 +1,7 @@
 # ProTVConvertor
 
+![Capture](https://user-images.githubusercontent.com/114284668/231539397-33625ca8-50d0-43b6-90b6-d9dacbd23e32.PNG)
+
 ProTVConvertor is a program that allows users to convert YouTube video links, YouTube playlist links, and HTTP and HTTPS video links into the correct format required for ProTV, a VRChat development add-on that allows users to create playlists to watch in VRChat. The program uses threading to complete these tasks as fast as possible, especially on modern CPUs. With this program, you can convert all the links into a playlist, with names, in the correct format. The program also comes with a feature for downloading thumbnails, checking for updates automatically, and it can automatically remove any YouTube videos that have been deleted or private, or any invalid YouTube video.
 
 ## FAQS
@@ -43,8 +45,6 @@ To update ProTVConvertor, follow these steps.
 9. For any questions, comments, concerns, etc., contact P.Penguin#7468
 
 Quick Note: If you are using URL Prefixes, make sure it is an HTTPS link, like https://nextnex.com/?url=. Also, make sure to put in your prefix before loading a playlist or link.
-
-![Capture](https://user-images.githubusercontent.com/114284668/231539397-33625ca8-50d0-43b6-90b6-d9dacbd23e32.PNG)
 
 ## SOURCE CODE USAGE:
 
