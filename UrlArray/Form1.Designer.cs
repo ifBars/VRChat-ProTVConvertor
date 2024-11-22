@@ -517,7 +517,7 @@ namespace ProTVConverter
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(145, 32);
             this.label16.TabIndex = 28;
-            this.label16.Text = "p.penguin";
+            this.label16.Text = "420bars";
             // 
             // label17
             // 
