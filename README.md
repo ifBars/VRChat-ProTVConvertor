@@ -34,11 +34,11 @@ ProTVConvertor is a program that allows users to convert YouTube video links, Yo
 
 ## Updating
 To update ProTVConvertor, follow these steps.
-1. Uninstall your current installion of ProTVConvertor if necessary, some older releases include an installer, however newever versions come as a folder with the exe to run the program inside.
+1. Uninstall your current installation of ProTVConvertor if necessary, some older releases include an installer, however newever versions come as a folder with the exe to run the program inside.
 2. Download the latest/desired version of ProTVConvertor.
 3. Unzip the files to a folder.
 4. Run the ProTVConvetor.exe file, or setup.exe if you are installing an older version, to open the program.
-5. If you are on an older version, after installion, you may delete the folder, and run the program by searching "ProTvConvert" in your search bar.
+5. If you are on an older version, after installation, you may delete the folder, and run the program by searching "ProTvConvert" in your search bar.
 
 ## Usage
 
